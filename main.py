@@ -19,7 +19,7 @@ def train(args):
     model = model.to(device)
 
     optimizer = tc.optim.Adam(model.parameters(), lr=args.learning_rate)
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
 
     save_path = os.path.join('save', utils.current_date_and_time())
     os.makedirs(save_path)
@@ -44,19 +44,18 @@ def train(args):
             loss.backward()
             optimizer.step()
             writer.add_scalar('loss', loss.item(), i + (epoch - 1) * len(train_loader))
-            break
 
         # TODO shorter epochs or different saving
 
         print('{}/{}'.format(str(epoch).zfill(2), args.n_epochs))
 
-        utils.plot_batch_as_patch(predictions.cpu().detach())
+        utils.plot_batch_of_patches_as_image(predictions.cpu().detach())
         writer.add_image('0_predictions', utils.plot_to_tensor(), epoch)
 
-        utils.plot_batch_as_patch(targets.cpu())
+        utils.plot_batch_of_patches_as_image(targets.cpu())
         writer.add_image('1_targets', utils.plot_to_tensor(), epoch)
 
-        utils.plot_batch_as_patch(glimpses.cpu())
+        utils.plot_batch_of_patches_as_image(glimpses.cpu())
         writer.add_image('2_glimpses', utils.plot_to_tensor(), epoch)
 
         # TODO start saving only after a time, or some quick delete
@@ -70,11 +69,11 @@ if __name__ == '__main__':
     parser.add_argument('--use_cuda', type=bool, default=True)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n_epochs', type=int, default=100)
-    parser.add_argument('--d_model', type=int, default=36)
-    parser.add_argument('--n_heads', type=int, default=2)
-    parser.add_argument('--n_layers', type=int, default=1)
+    parser.add_argument('--d_model', type=int, default=16)
+    parser.add_argument('--n_heads', type=int, default=8)
+    parser.add_argument('--n_layers', type=int, default=8)
     parser.add_argument('--dropout_rate', type=float, default=0.1)
-    parser.add_argument('--learning_rate', type=float, default=1e-3)
+    parser.add_argument('--learning_rate', type=float, default=1e-4)
     parser.add_argument('--layer_norm_eps', type=float, default=1e-5)
     args = parser.parse_args()
     train(args=args)

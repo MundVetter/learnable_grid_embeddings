@@ -20,7 +20,7 @@ def print_which_device(use_cuda):
 
 def get_position_embedding():
     max_len = 28  # TODO make less hard-coded to dataset
-    d_model = 18
+    d_model = 8
     factor = 10  # TODO question if original choice of 10000 is maybe better
     position_encoding = tc.zeros(max_len, d_model)
     position = tc.arange(0, max_len, dtype=tc.float).unsqueeze(1)
@@ -106,6 +106,31 @@ def plot_path(image, locations, glimpse_size=6):
         c = colors[i]
         plot_square(location, glimpse_size, c)
 
+def combine_patches_into_image(patches, image_size):
+    n_patches = patches.shape[0]
+    patch_size = int(np.sqrt(patches.shape[-1]))
+    n_rows = int(np.sqrt(n_patches))
+    n_cols = n_rows
+    image = np.zeros((image_size, image_size))
+    for i in range(n_rows):
+        for j in range(n_cols):
+            patch = patches[i * n_rows + j]
+            patch = patch.reshape(patch_size, patch_size)
+            image[i * patch_size:(i + 1) * patch_size,
+            j * patch_size:(j + 1) * patch_size] = patch
+    return image
+
+def plot_batch_of_patches_as_image(batch_of_patches, image_size=28):
+    n_images = batch_of_patches.shape[0]
+    approx_sqrt = math.ceil(np.sqrt(n_images))
+    fig, axs = plt.subplots(approx_sqrt, approx_sqrt)
+    for i, ax in enumerate(list(axs.reshape(-1))):
+        if i < len(batch_of_patches):
+            patches = batch_of_patches[i]
+            image = combine_patches_into_image(patches, image_size)
+            ax.imshow(image, 'gray')
+        ax.tick_params(left=False, right=False, labelleft=False,
+                       labelbottom=False, bottom=False)
 
 def makedirs(directory_name):
     if not os.path.exists(directory_name):
