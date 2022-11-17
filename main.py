@@ -44,6 +44,7 @@ def train(args):
             loss.backward()
             optimizer.step()
             writer.add_scalar('loss', loss.item(), i + (epoch - 1) * len(train_loader))
+            break
 
         # TODO shorter epochs or different saving
 

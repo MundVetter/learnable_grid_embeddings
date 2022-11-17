@@ -86,9 +86,11 @@ class GlimpseSequence:
 class MNIST_Glimpses(Dataset):
     def __init__(self):
         image_size = 28
-        glimpse_size = 6
-        shift_size = 6
-        self.sequence_length = 20
+        glimpse_size = 7
+        shift_size = 7
+        self.glimpse_size = glimpse_size
+        self.imag_size = image_size
+        self.sequence_length = 16
         self.required_coverage = 0.7
         self.image_dataset = datasets.MNIST(root='./data_input', train=True, download=True,
                                             transform=transforms.ToTensor())
@@ -106,7 +108,9 @@ class MNIST_Glimpses(Dataset):
     def __getitem__(self, idx):
         images, _ = self.image_dataset[idx]
         locations = self.get_locations()
-        query_locations = self.get_locations()
+        row = tc.arange(0, self.imag_size, self.glimpse_size)
+        col = tc.arange(0, self.imag_size, self.glimpse_size)
+        query_locations = tc.stack(tc.meshgrid(row, col), dim=-1).reshape(-1, 2)
         # locations = self.glimpser.get_locations_with_required_coverage(self.sequence_length, self.required_coverage)
         # query_locations = self.glimpser.get_random_locations(self.sequence_length)
 
@@ -119,32 +123,32 @@ class MNIST_Glimpses(Dataset):
         return glimpses, locations, targets, query_locations
 
 
-def make_dataset():
-    import utils
-    image_size = 28
-    glimpse_size = 6
-    shift_size = 6
-    sequence_length = 20
-    required_coverage = 0.7
-    n_images = 10
-    save_folder = 'mnistmap'
-    train_data = datasets.MNIST(root='./data_input', train=True, download=True, transform=transforms.ToTensor())
-    train_loader = DataLoader(train_data, batch_size=1, shuffle=True)
-    for i, (image, label) in enumerate(train_loader):
-        glimpser = GlimpseSequence(image_size=image_size, glimpse_size=glimpse_size, shift_size=shift_size)
-        glimpses, locations = glimpser.get_sequence_with_required_coverage(image, sequence_length, required_coverage)
-        # utils.plot_path(image[0, 0], locations)
-        # plt.show()
-        # break
+# def make_dataset():
+#     import utils
+#     image_size = 28
+#     glimpse_size = 6
+#     shift_size = 6
+#     sequence_length = 20
+#     required_coverage = 0.7
+#     n_images = 10
+#     save_folder = 'mnistmap'
+#     train_data = datasets.MNIST(root='./data_input', train=True, download=True, transform=transforms.ToTensor())
+#     train_loader = DataLoader(train_data, batch_size=1, shuffle=True)
+#     for i, (image, label) in enumerate(train_loader):
+#         glimpser = GlimpseSequence(image_size=image_size, glimpse_size=glimpse_size, shift_size=shift_size)
+#         glimpses, locations = glimpser.get_sequence_with_required_coverage(image, sequence_length, required_coverage)
+#         # utils.plot_path(image[0, 0], locations)
+#         # plt.show()
+#         # break
 
 
 def make_locations_data():
     utils.makedirs('data_output')
     required_coverage = 0.7
     image_size = 28
-    glimpse_size = 6
-    shift_size = 6
-    sequence_length = 20
+    glimpse_size = 7
+    shift_size = 7
+    sequence_length = 16
     glimpser = GlimpseSequence(image_size=image_size, glimpse_size=glimpse_size, shift_size=shift_size)
     n_locations = 10000
     locations = []

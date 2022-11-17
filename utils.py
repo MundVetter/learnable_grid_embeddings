@@ -68,6 +68,8 @@ def plot_to_tensor():
     plt.close()
     return tensor
 
+# def sort_batch(batch_of_
+
 
 # def plot_batch(batch_of_images):
 #     plot_image(make_grid(batch_of_images, 4)[0])
