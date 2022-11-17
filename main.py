@@ -43,7 +43,7 @@ def train(args):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            writer.add_scalar('loss', loss.item(), i)
+            writer.add_scalar('loss', loss.item(), i + (epoch - 1) * len(train_loader))
 
         # TODO shorter epochs or different saving
 
@@ -67,7 +67,7 @@ def train(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cuda', type=bool, default=True)
-    parser.add_argument('--batch_size', type=int, default=4)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n_epochs', type=int, default=100)
     parser.add_argument('--d_model', type=int, default=36)
     parser.add_argument('--n_heads', type=int, default=2)

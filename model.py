@@ -11,7 +11,7 @@ class MapFormer(nn.Module):
         dropout_rate = args.dropout_rate
         layer_norm_eps = args.layer_norm_eps
 
-        self.position_embedding = utils.get_position_embedding()
+        self.position_embedding = utils.get_position_embedding().to(utils.get_device(args.use_cuda))
 
         encoder_layer = nn.TransformerEncoderLayer(d_model, n_heads, d_model, dropout_rate)
         encoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps)
