@@ -20,8 +20,8 @@ def print_which_device(use_cuda):
 
 def get_position_embedding():
     max_len = 28  # TODO make less hard-coded to dataset
-    d_model = 8
-    factor = 10  # TODO question if original choice of 10000 is maybe better
+    d_model = 16
+    factor = 100 # TODO question if original choice of 10000 is maybe better
     position_encoding = tc.zeros(max_len, d_model)
     position = tc.arange(0, max_len, dtype=tc.float).unsqueeze(1)
     div_term = tc.exp(tc.arange(0, d_model, 2).float() * (-math.log(factor) / d_model))

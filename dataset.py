@@ -90,7 +90,7 @@ class MNIST_Glimpses(Dataset):
         shift_size = 4
         self.glimpse_size = glimpse_size
         self.imag_size = image_size
-        self.sequence_length = 49
+        self.sequence_length = 40
         self.required_coverage = 0.7
         self.image_dataset = datasets.MNIST(root='./data_input', train=True, download=True,
                                             transform=transforms.ToTensor())
@@ -124,6 +124,46 @@ class MNIST_Glimpses(Dataset):
 
         return glimpses, query_locations, targets, query_locations
 
+class MNIST_Glimpses_classify(Dataset):
+    def __init__(self, train=True):
+        image_size = 28
+        glimpse_size = 4
+        shift_size = 4
+        self.glimpse_size = glimpse_size
+        self.imag_size = image_size
+        self.sequence_length = 40
+        self.required_coverage = 0.7
+        self.image_dataset = datasets.MNIST(root='./data_input', train=train, download=True,
+                                            transform=transforms.ToTensor())
+        self.locations_dataset_path = 'data_output/locations.pt'
+        self.locations = tc.load(self.locations_dataset_path)
+        self.glimpser = GlimpseSequence(image_size=image_size, glimpse_size=glimpse_size, shift_size=shift_size)
+
+    def get_locations(self):
+        random_idx = int(tc.randint(len(self.locations), (1,)))
+        return self.locations[random_idx]
+
+    def __len__(self):
+        return len(self.image_dataset)
+
+    def __getitem__(self, idx):
+        image, targets = self.image_dataset[idx]
+        locations = self.get_locations()
+        # row = tc.arange(0, self.imag_size, self.glimpse_size)
+        # col = tc.arange(0, self.imag_size, self.glimpse_size)
+        # query_locations = tc.stack(tc.meshgrid(row, col), dim=-1).reshape(-1, 2)
+        # locations = self.glimpser.get_locations_with_required_coverage(self.sequence_length, self.required_coverage)
+        # query_locations = self.glimpser.get_random_locations(self.sequence_length)
+
+        glimpses = self.glimpser.get_glimpses(image, locations)
+
+
+
+        glimpses = utils.collapse_last_dim(glimpses, dim=2)
+
+        return glimpses, locations, targets
+
+
 
 # def make_dataset():
 #     import utils
@@ -150,7 +190,7 @@ def make_locations_data():
     image_size = 28
     glimpse_size = 4
     shift_size = 4
-    sequence_length = 49
+    sequence_length = 40
     glimpser = GlimpseSequence(image_size=image_size, glimpse_size=glimpse_size, shift_size=shift_size)
     n_locations = 10000
     locations = []
