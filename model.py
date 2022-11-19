@@ -130,23 +130,23 @@ class MapFormer_classifier(nn.Module):
         n_heads = args.n_heads
         n_layers = args.n_layers
         dropout_rate = args.dropout_rate
-        layer_norm_eps = args.layer_norm_eps
-        patch_size = 4
+        mlp_dim = args.mlp_dim
+        patch_size = args.patch_size
 
         self.cls_token = nn.Parameter(tc.randn(1, 1, d_model))
         self.cls_pos_token = nn.Parameter(tc.randn(1, 1, d_model))
 
-        self.position_embedding = utils.get_position_embedding().to(utils.get_device(args.use_cuda))
+        self.position_embedding = utils.get_position_embedding(d_model).to(utils.get_device(args.use_cuda))
         
         self.patch_to_embedding = nn.Linear(patch_size * patch_size, d_model)
 
         # encoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps)
-        self.transformer_encoder = Transformer(d_model, n_layers, n_heads, d_model, 128, dropout = dropout_rate)
+        self.transformer_encoder = Transformer(d_model, n_layers, n_heads, d_model, mlp_dim, dropout = dropout_rate)
 
         self.output =  nn.Sequential(
-            nn.Linear(d_model, 128),
+            nn.Linear(d_model, mlp_dim),
             nn.ReLU(),
-            nn.Linear(128, 10)
+            nn.Linear(mlp_dim, 10)
         )
 
         self.softmax = nn.LogSoftmax(dim=1)

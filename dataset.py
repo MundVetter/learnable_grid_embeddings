@@ -125,7 +125,7 @@ class MNIST_Glimpses(Dataset):
         return glimpses, query_locations, targets, query_locations
 
 class MNIST_Glimpses_classify(Dataset):
-    def __init__(self, train=True):
+    def __init__(self, train=True, positional_info=False):
         image_size = 28
         glimpse_size = 4
         shift_size = 4
@@ -138,6 +138,7 @@ class MNIST_Glimpses_classify(Dataset):
         self.locations_dataset_path = 'data_output/locations.pt'
         self.locations = tc.load(self.locations_dataset_path)
         self.glimpser = GlimpseSequence(image_size=image_size, glimpse_size=glimpse_size, shift_size=shift_size)
+        self.positional_info = positional_info
 
     def get_locations(self):
         random_idx = int(tc.randint(len(self.locations), (1,)))
@@ -149,11 +150,6 @@ class MNIST_Glimpses_classify(Dataset):
     def __getitem__(self, idx):
         image, targets = self.image_dataset[idx]
         locations = self.get_locations()
-        # row = tc.arange(0, self.imag_size, self.glimpse_size)
-        # col = tc.arange(0, self.imag_size, self.glimpse_size)
-        # query_locations = tc.stack(tc.meshgrid(row, col), dim=-1).reshape(-1, 2)
-        # locations = self.glimpser.get_locations_with_required_coverage(self.sequence_length, self.required_coverage)
-        # query_locations = self.glimpser.get_random_locations(self.sequence_length)
 
         glimpses = self.glimpser.get_glimpses(image, locations)
 
@@ -161,7 +157,10 @@ class MNIST_Glimpses_classify(Dataset):
 
         glimpses = utils.collapse_last_dim(glimpses, dim=2)
 
-        return glimpses, locations, targets
+        if self.positional_info:
+            return glimpses, targets, locations
+        else:
+            return glimpses, tc.zeros_like(locations), targets
 
 
 
