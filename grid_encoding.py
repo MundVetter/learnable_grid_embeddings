@@ -20,6 +20,7 @@ def hexagon_encoding(t):
     k1 = tc.tensor([1.0, 0.0])
     k2 = tc.tensor([-1/2, 3**0.5/2])
     k3 = tc.tensor([-1/2, -3**0.5/2])
+    t += 1
 
     encoding = tc.sin(special_dot(t, k1)) + tc.sin(special_dot(t, k2)) + tc.sin(special_dot(t, k3))
 
@@ -41,11 +42,11 @@ def triangle_encoding(t):
 
     return encoding
 
-def generate_position_encoding(max_len, d_model, factor=100, encode_function=hexagon_encoding):
+def generate_position_encoding(max_len, dim, factor=100, encode_function=hexagon_encoding):
     """ Generate position encoding for a given max_len and d_model.
     """
     position = get_all_positions(max_len)
-    div_term = calculate_div_term(d_model, factor)
+    div_term = calculate_div_term(dim, factor)
     # change div term such that [x,y,..., z] -> [[x,x], [y,y], ..., [z,z]]
     div_term = tc.stack([div_term, div_term], dim=-1)
 
@@ -54,7 +55,7 @@ def generate_position_encoding(max_len, d_model, factor=100, encode_function=hex
 
     encodings = encode_function(position_scales)
 
-    return encodings.reshape(max_len, max_len, d_model)
+    return encodings.reshape(max_len, max_len, dim)
 
 
 if __name__ == "__main__":
@@ -66,8 +67,10 @@ if __name__ == "__main__":
     # plt.plot([0, k2[0]], [0, k2[1]], 'r')
     # plt.show()
 
+    # print(triangle_encoding(tc.tensor([[0, 500]])))
+
     # # plot the encoding
-    encodings = generate_position_encoding(100, 3, 10,encode_function=square_encoding)
+    encodings = generate_position_encoding(100, 3, 10,encode_function=hexagon_encoding)
     plt.imshow(encodings)
     plt.show()
 

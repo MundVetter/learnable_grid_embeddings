@@ -18,14 +18,12 @@ def print_which_device(use_cuda):
         print('Training on CPU.')
 
 
-def get_position_embedding(d_model):
-    max_len = 28  # TODO make less hard-coded to dataset
-    factor = 100 # TODO question if original choice of 10000 is maybe better
-    d_model = d_model // 2
-    assert d_model % 2 == 0, 'd_model must be even'
-    position_encoding = tc.zeros(max_len, d_model)
+def get_position_embedding(max_len, dim, factor):
+    dim = dim // 2
+    assert dim % 2 == 0, 'dim must be even'
+    position_encoding = tc.zeros(max_len, dim)
     position = tc.arange(0, max_len, dtype=tc.float).unsqueeze(1)
-    div_term = tc.exp(tc.arange(0, d_model, 2).float() * (-math.log(factor) / d_model))
+    div_term = tc.exp(tc.arange(0, dim, 2).float() * (-math.log(factor) / dim))
     position_encoding[:, 0::2] = tc.sin(position * div_term)
     position_encoding[:, 1::2] = tc.cos(position * div_term)
     return position_encoding
@@ -154,7 +152,7 @@ if __name__ == '__main__':
     assert collapse_last_dim(x, dim=4).shape == tc.Size([15, 1, 4, 4])
     assert collapse_last_dim(x, dim=5).shape == tc.Size([15, 1, 4, 4])
 
-    position_encoding = get_position_embedding(16)
+    position_encoding = get_position_embedding(28, 16, 100)
     plot_image(position_encoding)
     plt.show()
 

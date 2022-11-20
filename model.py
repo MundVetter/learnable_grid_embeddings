@@ -9,6 +9,8 @@ from torch import nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
+import grid_encoding
+
 
 # helpers
 
@@ -85,42 +87,41 @@ class Transformer(nn.Module):
             x = ff(x) + x
         return x
 
-class MapFormer(nn.Module):
-    def __init__(self, args):
-        super(MapFormer, self).__init__()
-        d_model = args.d_model
-        n_heads = args.n_heads
-        n_layers = args.n_layers
-        dropout_rate = args.dropout_rate
-        layer_norm_eps = args.layer_norm_eps
-        patch_size = 4
-
-        self.position_embedding = utils.get_position_embedding().to(utils.get_device(args.use_cuda))
+# class MapFormer(nn.Module):
+#     def __init__(self, args):
+#         super(MapFormer, self).__init__()
+#         d_model = args.d_model
+#         n_heads = args.n_heads
+#         n_layers = args.n_layers
+#         dropout_rate = args.dropout_rate
+#         layer_norm_eps = args.layer_norm_eps
+#         max_len = args.max_len
+#         patch_size = args.patch_size
         
-        self.patch_to_embedding = nn.Linear(patch_size * patch_size, d_model)
+#         self.patch_to_embedding = nn.Linear(patch_size * patch_size, d_model)
 
-        encoder_layer = nn.TransformerEncoderLayer(d_model, n_heads, d_model, dropout_rate)
-        encoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, n_layers, encoder_norm)
+#         encoder_layer = nn.TransformerEncoderLayer(d_model, n_heads, d_model, dropout_rate)
+#         encoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps)
+#         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, n_layers, encoder_norm)
 
-        decoder_layer = nn.TransformerDecoderLayer(d_model, n_heads, d_model, dropout_rate)
-        decoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps)
-        self.transformer_decoder = nn.TransformerDecoder(decoder_layer, n_layers, decoder_norm)
+#         decoder_layer = nn.TransformerDecoderLayer(d_model, n_heads, d_model, dropout_rate)
+#         decoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps)
+#         self.transformer_decoder = nn.TransformerDecoder(decoder_layer, n_layers, decoder_norm)
 
-        self.output = nn.Linear(d_model, patch_size * patch_size)
+#         self.output = nn.Linear(d_model, patch_size * patch_size)
 
-        self.sigmoid = nn.Sigmoid()
+#         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, inputs):
-        glimpses, locations, query_locations = inputs
-        targets = utils.collapse_last_dim(self.position_embedding[query_locations], dim=3)
-        locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
-        glimpses = self.patch_to_embedding(glimpses)
-        source = glimpses + locations
-        memory = self.transformer_encoder(source)
-        output = self.transformer_decoder(targets, memory)
-        output = self.output(output)
-        return self.sigmoid(output)
+#     def forward(self, inputs):
+#         glimpses, locations, query_locations = inputs
+#         targets = utils.collapse_last_dim(self.position_embedding[query_locations], dim=3)
+#         locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
+#         glimpses = self.patch_to_embedding(glimpses)
+#         source = glimpses + locations
+#         memory = self.transformer_encoder(source)
+#         output = self.transformer_decoder(targets, memory)
+#         output = self.output(output)
+#         return self.sigmoid(output)
 
 
 class MapFormer_classifier(nn.Module):
@@ -132,12 +133,19 @@ class MapFormer_classifier(nn.Module):
         dropout_rate = args.dropout_rate
         mlp_dim = args.mlp_dim
         patch_size = args.patch_size
+        max_len = args.max_len
+        factor = args.div_factor
+        self.pos_encoding = args.pos_encoding
 
         self.cls_token = nn.Parameter(tc.randn(1, 1, d_model))
         self.cls_pos_token = nn.Parameter(tc.randn(1, 1, d_model))
 
-        self.position_embedding = utils.get_position_embedding(d_model).to(utils.get_device(args.use_cuda))
-        
+        if self.pos_encoding == 'grid':
+            function = getattr(grid_encoding, f'{args.encoding_type}_encoding')
+            self.position_embedding = grid_encoding.generate_position_encoding(max_len, d_model, factor, encode_function=function)
+        else:
+            self.position_embedding = utils.get_position_embedding(max_len, d_model, factor).to(utils.get_device(args.use_cuda))
+    
         self.patch_to_embedding = nn.Linear(patch_size * patch_size, d_model)
 
         # encoder_norm = nn.LayerNorm(d_model, eps=layer_norm_eps)
@@ -153,14 +161,18 @@ class MapFormer_classifier(nn.Module):
 
     def forward(self, inputs):
         glimpses, locations= inputs
-        locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
+        if self.pos_encoding == 'grid':
+            x, y = locations[:,:, 0], locations[:,:, 1]
+            locations = self.position_embedding[x, y]
+        else:
+            locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
         batch_size = glimpses.shape[0]
         glimpses = self.patch_to_embedding(glimpses)
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)
         glimpses = tc.cat((cls_tokens, glimpses), dim=1)
         cls_pos_tokens = self.cls_pos_token.expand(batch_size, -1, -1)
         locations = tc.cat((cls_pos_tokens, locations), dim=1)
-
+    
         source = glimpses + locations
         encoding = self.transformer_encoder(source)
         output = self.output(encoding[:, 0])

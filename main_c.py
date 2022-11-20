@@ -25,8 +25,8 @@ def train(args):
     os.makedirs(save_path)
     writer = SummaryWriter(logdir=save_path)
 
-    train_data = dataset.MNIST_Glimpses_classify(train=True)
-    test_data = dataset.MNIST_Glimpses_classify(train=False)
+    train_data = dataset.MNIST_Glimpses_classify(True, args.pos_encoding)
+    test_data = dataset.MNIST_Glimpses_classify(False, args.pos_encoding)
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, drop_last=True)
     test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=False)
 
@@ -86,6 +86,9 @@ if __name__ == '__main__':
     parser.add_argument('--mlp_dim', type=int, default=128)
     parser.add_argument('--layer_norm_eps', type=float, default=1e-5)
     parser.add_argument('--patch_size', type=int, default=4)
-    parser.add_argument('--no_positional_info', type=bool, default=False)
+    parser.add_argument('--max_len', type=int, default=28)
+    parser.add_argument('--div_factor', type=int, default=100)
+    parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'none'], default='grid')
+    parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle'], default='hexagon', help='only used if positional_encoding is grid')
     args = parser.parse_args()
     train(args=args)
