@@ -6,8 +6,6 @@ import math
 def special_dot(t, k):
     return t[..., 0] * k[0] + t[..., 1] * k[1]
 
-# def special_mul(t, k):
-    # return tc.stack([t[:, 0] * k, t[:, 1] * k], dim=-1)
 
 def calculate_div_term(d_model, factor):
     return tc.exp(tc.arange(0, d_model).float() * (-math.log(factor) / d_model))
