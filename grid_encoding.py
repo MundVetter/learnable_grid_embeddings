@@ -20,7 +20,6 @@ def hexagon_encoding(t):
     k1 = tc.tensor([1.0, 0.0])
     k2 = tc.tensor([-1/2, 3**0.5/2])
     k3 = tc.tensor([-1/2, -3**0.5/2])
-    t += 1
 
     encoding = tc.sin(special_dot(t, k1)) + tc.sin(special_dot(t, k2)) + tc.sin(special_dot(t, k3))
 
@@ -70,21 +69,21 @@ if __name__ == "__main__":
     # print(triangle_encoding(tc.tensor([[0, 500]])))
 
     # # plot the encoding
-    encodings = generate_position_encoding(100, 3, 10,encode_function=hexagon_encoding)
-    plt.imshow(encodings)
-    plt.show()
+    # encodings = generate_position_encoding(100, 3, 10,encode_function=hexagon_encoding)
+    # plt.imshow(encodings)
+    # plt.show()
 
-    # x = tc.arange(0, 40, 1)
-    # y = tc.arange(0, 40, 1)
+    x = tc.arange(0, 40, 1)
+    y = tc.arange(0, 40, 1)
 
-    # t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
+    t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
 
-    # # z = grid_encoding(t)
+    z =hexagon_encoding(t)
     # # z = square_encoding(t)
     # z = triangle_encoding(t)
     # print(z)
 
-    # ax = plt.axes(projection='3d')
-    # ax.view_init(azim=0, elev=90)
-    # ax.plot_trisurf(t[:, 0], t[:, 1], z, cmap='viridis', edgecolor='none')
-    # plt.show()
+    ax = plt.axes(projection='3d')
+    ax.view_init(azim=0, elev=90)
+    ax.plot_trisurf(t[:, 0], t[:, 1], z, cmap='viridis', edgecolor='none')
+    plt.show()

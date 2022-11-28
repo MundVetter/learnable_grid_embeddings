@@ -25,15 +25,14 @@ def train(args):
     os.makedirs(save_path)
     writer = SummaryWriter(logdir=save_path)
 
-    train_data = dataset.MNIST_Glimpses_classify(True, args.pos_encoding)
-    test_data = dataset.MNIST_Glimpses_classify(False, args.pos_encoding)
+    train_data = dataset.MNIST_Glimpses_classify(True, args.pos_encoding, args.fashion)
+    test_data = dataset.MNIST_Glimpses_classify(False, args.pos_encoding, args.fashion)
     train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, drop_last=True)
     test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=False)
 
     for epoch in range(1, args.n_epochs):
         model.train()
         for i, (glimpses, locations, targets) in enumerate(train_loader):
-
             glimpses = glimpses.to(device)
             locations = locations.to(device)
             targets = targets.to(device)
@@ -68,14 +67,13 @@ def train(args):
 
 
         # TODO start saving only after a time, or some quick delete
-
         if epoch % 10 == 0:
             tc.save(model.state_dict(), '{}/model_{}.pt'.format(save_path, str(epoch).zfill(2)))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--use_cuda', type=bool, default=True)
+    parser.add_argument('--use_cuda', type=bool, default=False)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n_epochs', type=int, default=100)
     parser.add_argument('--d_model', type=int, default=32)
@@ -90,5 +88,6 @@ if __name__ == '__main__':
     parser.add_argument('--div_factor', type=int, default=100)
     parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'none'], default='grid')
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle'], default='hexagon', help='only used if positional_encoding is grid')
+    parser.add_argument('--fashion', type=bool, default=False)
     args = parser.parse_args()
     train(args=args)

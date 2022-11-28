@@ -84,7 +84,7 @@ class GlimpseSequence:
 # class LocationsDataset(Dataset):
 
 class MNIST_Glimpses(Dataset):
-    def __init__(self):
+    def __init__(self, train=True, positional_encoding='none', fashion=False):
         image_size = 28
         glimpse_size = 4
         shift_size = 4
@@ -92,11 +92,16 @@ class MNIST_Glimpses(Dataset):
         self.imag_size = image_size
         self.sequence_length = 40
         self.required_coverage = 0.7
-        self.image_dataset = datasets.MNIST(root='./data_input', train=True, download=True,
+        if fashion:
+            self.image_dataset = datasets.FashionMNIST('./data_input', train=True, download=True,
+                                                       transform=transforms.ToTensor())
+        else:
+            self.image_dataset = datasets.MNIST(root='./data_input', train=True, download=True,
                                             transform=transforms.ToTensor())
         self.locations_dataset_path = 'data_output/locations.pt'
         self.locations = tc.load(self.locations_dataset_path)
         self.glimpser = GlimpseSequence(image_size=image_size, glimpse_size=glimpse_size, shift_size=shift_size)
+        self.positional_encoding = positional_encoding
 
     def get_locations(self):
         random_idx = int(tc.randint(len(self.locations), (1,)))
@@ -106,26 +111,20 @@ class MNIST_Glimpses(Dataset):
         return len(self.image_dataset)
 
     def __getitem__(self, idx):
-        image, _ = self.image_dataset[idx]
+        image, targets = self.image_dataset[idx]
         locations = self.get_locations()
-        row = tc.arange(0, self.imag_size, self.glimpse_size)
-        col = tc.arange(0, self.imag_size, self.glimpse_size)
-        query_locations = tc.stack(tc.meshgrid(row, col), dim=-1).reshape(-1, 2)
-        # locations = self.glimpser.get_locations_with_required_coverage(self.sequence_length, self.required_coverage)
-        # query_locations = self.glimpser.get_random_locations(self.sequence_length)
 
-        glimpses = self.glimpser.get_glimpses(image, query_locations)
-        targets = self.glimpser.get_glimpses(image, query_locations)
-
-
+        glimpses = self.glimpser.get_glimpses(image, locations)
 
         glimpses = utils.collapse_last_dim(glimpses, dim=2)
-        targets = utils.collapse_last_dim(targets, dim=2)
 
-        return glimpses, query_locations, targets, query_locations
+        if self.positional_encoding == 'none':
+            return glimpses, tc.zeros_like(locations), targets
+        else:
+            return glimpses, locations, targets, image
 
 class MNIST_Glimpses_classify(Dataset):
-    def __init__(self, train=True, positional_encoding='none'):
+    def __init__(self, train=True, positional_encoding='none', fashion=False):
         image_size = 28
         glimpse_size = 4
         shift_size = 4
@@ -133,7 +132,11 @@ class MNIST_Glimpses_classify(Dataset):
         self.imag_size = image_size
         self.sequence_length = 40
         self.required_coverage = 0.7
-        self.image_dataset = datasets.MNIST(root='./data_input', train=train, download=True,
+        if fashion:
+            self.image_dataset = datasets.FashionMNIST('./data_input', train=True, download=True,
+                                                       transform=transforms.ToTensor())
+        else:
+            self.image_dataset = datasets.MNIST(root='./data_input', train=True, download=True,
                                             transform=transforms.ToTensor())
         self.locations_dataset_path = 'data_output/locations.pt'
         self.locations = tc.load(self.locations_dataset_path)
@@ -187,7 +190,7 @@ def make_locations_data():
     image_size = 28
     glimpse_size = 4
     shift_size = 4
-    sequence_length = 40
+    sequence_length = 20
     glimpser = GlimpseSequence(image_size=image_size, glimpse_size=glimpse_size, shift_size=shift_size)
     n_locations = 10000
     locations = []
