@@ -41,7 +41,7 @@ def triangle_encoding(t):
 
     return encoding
 
-def generate_position_encoding(max_len, dim, factor=100, encode_function=hexagon_encoding):
+def generate_positional_encoding(max_len, dim, factor=100, encode_function=hexagon_encoding):
     """ Generate position encoding for a given max_len and d_model.
     """
     position = get_all_positions(max_len)

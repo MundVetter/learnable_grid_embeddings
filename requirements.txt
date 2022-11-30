@@ -1,2 +1,3 @@
 torch
 einops
+timm==0.3.2
