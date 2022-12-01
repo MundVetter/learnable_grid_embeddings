@@ -25,7 +25,7 @@ class MaskedAutoencoderViT(nn.Module):
     def __init__(self, img_size=224, patch_size=16, in_chans=3,
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
-                 mlp_ratio=4., norm_layer=partial(nn.LayerNorm, eps=1e-6), norm_pix_loss=True, pos_encoding = 'grid', encoding_type = 'hexagon',use_cuda=True, factor = 100, n_patches=10, **kwargs):
+                 mlp_ratio=4., norm_layer=partial(nn.LayerNorm, eps=1e-6), norm_pix_loss=False, pos_encoding = 'grid', encoding_type = 'hexagon',use_cuda=True, factor = 100, n_patches=10, **kwargs):
         super().__init__()
         assert img_size % patch_size == 0, 'img_size must be divisible by patch_size'
         assert embed_dim % num_heads == 0, 'embed_dim must be divisible by num_heads'
@@ -198,7 +198,7 @@ class MaskedAutoencoderViT(nn.Module):
         # predictor projection
         x = self.decoder_pred(x)
 
-        # keep only mask tokens
+        # keep only mask 
         x = x[:, 1 + self.keep_length:, :]
 
         return x
