@@ -63,7 +63,6 @@ def train(args):
             optimizer.zero_grad()
             writer.add_scalar('loss', loss.item(), i + (epoch - 1) * len(train_loader))
             writer.add_scalar('learning rate', optimizer.param_groups[0]['lr'], i + (epoch - 1) * len(train_loader))
-            break
 
         # TODO shorter epochs or different saving
 
@@ -136,7 +135,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle'], default='triangle', help='only used if positional_encoding is grid')
     parser.add_argument('--pos_embed', choices=['grid', 'naive', 'none'], default='naive')
-    parser.add_argument('--div_factor', type=int, default=32)
+    parser.add_argument('--div_factor', type=int, default=100)
 
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--img_size', type=int, default=96)
