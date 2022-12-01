@@ -34,8 +34,12 @@ def train(args):
     writer = SummaryWriter(logdir=save_path)
     
     dataset_type = getattr(datasets, args.dataset)
-    train_data = dataset_type(root=args.data_path, train=True, download=True, transform=transforms.ToTensor())
-    test_data = dataset_type(root=args.data_path, train=False, download=True, transform=transforms.ToTensor())
+    if args.dataset == 'STL10':
+        train_data = dataset_type(root=args.data_path, split='unlabeled', download=True, transform=transforms.ToTensor())
+        test_data = dataset_type(root=args.data_path, split='test', download=True, transform=transforms.ToTensor())
+    else:
+        train_data = dataset_type(root=args.data_path, train=True, download=True, transform=transforms.ToTensor())
+        test_data = dataset_type(root=args.data_path, train=False, download=True, transform=transforms.ToTensor())
     train_data = dataset.FluidMask(train_data, args)
     test_data = dataset.FluidMask(test_data, args)
 
@@ -54,11 +58,12 @@ def train(args):
             targets = targets.to(device)
             imgs = imgs.to(device)
 
-            loss, _, _ = model(glimpses, locations, imgs)
+            loss, _ = model(glimpses, locations, imgs)
             loss_scaler(loss, optimizer, parameters=model.parameters(), update_grad=True)
             optimizer.zero_grad()
             writer.add_scalar('loss', loss.item(), i + (epoch - 1) * len(train_loader))
             writer.add_scalar('learning rate', optimizer.param_groups[0]['lr'], i + (epoch - 1) * len(train_loader))
+            break
 
         # TODO shorter epochs or different saving
 
@@ -74,7 +79,7 @@ def train(args):
                 imgs = imgs.to(device)
 
                 optimizer.zero_grad()
-                loss, predictions, predicted_patches = model(glimpses, locations, imgs)
+                loss, predictions = model(glimpses, locations, imgs)
                 total_loss += loss.item()
                 if i == 0:
                     img_grid = make_grid(imgs)
@@ -83,18 +88,18 @@ def train(args):
                     writer.add_image('predictions', predictions_grid, epoch)
 
                     input_imgs = []
-                    predicted_imgs = []
-                    for glimpse_item, predicted_item, location_item in zip(glimpses, predicted_patches, locations):
-                        img = utils.create_image_from_glimpses(glimpse_item, location_item, args.img_size)
-                        predicted_img = utils.create_image_from_glimpses(predicted_item, location_item, args.img_size)
-                        predicted_imgs.append(predicted_img)
+                    # predicted_imgs = []
+                    for glimpse_item, location_item in zip(glimpses,  locations):
+                        img = utils.create_image_from_glimpses(glimpse_item, location_item, args.img_size, args.in_chans)
+                    #     predicted_img = utils.create_image_from_glimpses(predicted_item, location_item, args.img_size)
+                    #     predicted_imgs.append(predicted_img)
                         input_imgs.append(img)
-                    predicted_imgs = torch.stack(predicted_imgs)
+                    # predicted_imgs = torch.stack(predicted_imgs)
                     input_imgs = torch.stack(input_imgs)
-                    predicted_imgs_grid = make_grid(predicted_imgs)
+                    # predicted_imgs_grid = make_grid(predicted_imgs)
                     input_imgs_grid = make_grid(input_imgs)
                     writer.add_image('input glimpses', input_imgs_grid, epoch)
-                    writer.add_image('predicted glimpses', predicted_imgs_grid, epoch)
+                    # writer.add_image('predicted glimpses', predicted_imgs_grid, epoch)
             writer.add_scalar('validation loss', total_loss / len(test_loader), epoch)
 
         # TODO start saving only after a time, or some quick delete
@@ -106,7 +111,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cuda', type=bool, default=True)
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--n_epochs', type=int, default=100)
+    parser.add_argument('--n_epochs', type=int, default=200)
 
     # Optimizer parameters
     parser.add_argument('--weight_decay', type=float, default=0.05,
@@ -121,23 +126,23 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_epochs', type=int, default=40, metavar='N',
                         help='epochs to warmup LR')
 
-    parser.add_argument('--embed_dim', type=int, default=128)
+    parser.add_argument('--embed_dim', type=int, default=256)
     parser.add_argument('--depth', type=int, default=6)
-    parser.add_argument('--num_heads', type=int, default=4)
-    parser.add_argument('--decoder_embed_dim', type=int, default=128)
+    parser.add_argument('--num_heads', type=int, default=8)
+    parser.add_argument('--decoder_embed_dim', type=int, default=256)
     parser.add_argument('--decoder_depth', type=int, default=6)
-    parser.add_argument('--decoder_num_heads', type=int, default=4)
+    parser.add_argument('--decoder_num_heads', type=int, default=8)
     parser.add_argument('--mlp_ratio', type=int, default=4)
 
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle'], default='triangle', help='only used if positional_encoding is grid')
     parser.add_argument('--pos_embed', choices=['grid', 'naive', 'none'], default='naive')
-    parser.add_argument('--div_factor', type=int, default=28)
+    parser.add_argument('--div_factor', type=int, default=32)
 
-    parser.add_argument('--patch_size', type=int, default=7)
-    parser.add_argument('--img_size', type=int, default=28)
-    parser.add_argument('--in_chans', type=int, default=1)
-    parser.add_argument('--n_patches', type=int, default=8)
-    parser.add_argument('--dataset', type=str, default="MNIST")
+    parser.add_argument('--patch_size', type=int, default=16)
+    parser.add_argument('--img_size', type=int, default=96)
+    parser.add_argument('--in_chans', type=int, default=3)
+    parser.add_argument('--n_patches', type=int, default=9)
+    parser.add_argument('--dataset', type=str, default="STL10")
     parser.add_argument('--data_path', type=str, default="data_input")
 
     args = parser.parse_args()

@@ -167,28 +167,28 @@ def get_grad_norm_(parameters, norm_type: float = 2.0) -> torch.Tensor:
         total_norm = torch.norm(torch.stack([torch.norm(p.grad.detach(), norm_type).to(device) for p in parameters]), norm_type)
     return total_norm
 
-def add_glimpse_to_image(image, glimpse, location, glimpse_size):
+def add_glimpse_to_image(image, glimpse, location, glimpse_size, channel=1):
     x = location[0]
     y = location[1]
     # convert glimpse to 2d
     # glimpse = glimpse.reshape(glimpse_size, glimpse_size)\
-    image[x:x + glimpse_size,
-    y:y + glimpse_size] = glimpse.reshape(glimpse_size, glimpse_size)
+    image[:, x:x + glimpse_size,
+    y:y + glimpse_size] = glimpse.reshape(channel, glimpse_size, glimpse_size)
 
     return image
 
-def create_image_from_glimpses(glimpses, locations, img_size=28):
+def create_image_from_glimpses(glimpses, locations, img_size=28, channel=3):
     """Create a single image from a sequence of glimpses and locations."""
     # start with a black image
-    glimpse_size = int(math.sqrt(glimpses.shape[1]))
-    image = torch.zeros((img_size + glimpse_size, img_size + glimpse_size))
+    glimpse_size = int(math.sqrt(glimpses.shape[1] / channel))
+    image = torch.zeros((channel, img_size + glimpse_size, img_size + glimpse_size))
     half = glimpse_size // 2
     # loop over glimpses and locations
     for glimpse, location in zip(glimpses, locations):
         # add the glimpse to the image
-        image = add_glimpse_to_image(image, glimpse, location, glimpse_size)
-    image = image[half:-half, half:-half]
-    return image.unsqueeze(0)
+        image = add_glimpse_to_image(image, glimpse, location, glimpse_size, channel)
+    image = image[:, half:-half, half:-half]
+    return image
 
 
 
@@ -226,7 +226,7 @@ def adjust_learning_rate(optimizer, epoch, args):
         lr = args.lr * epoch / args.warmup_epochs 
     else:
         lr = args.min_lr + (args.lr - args.min_lr) * 0.5 * \
-            (1. + math.cos(math.pi * (epoch - args.warmup_epochs) / (args.epochs - args.warmup_epochs)))
+            (1. + math.cos(math.pi * (epoch - args.warmup_epochs) / (args.n_epochs - args.warmup_epochs)))
     for param_group in optimizer.param_groups:
         if "lr_scale" in param_group:
             param_group["lr"] = lr * param_group["lr_scale"]

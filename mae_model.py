@@ -63,7 +63,7 @@ class MaskedAutoencoderViT(nn.Module):
          # fixed sin-cos embedding
         self.decoder_blocks = nn.ModuleList([
             Block(decoder_embed_dim, decoder_num_heads, mlp_ratio, qkv_bias=True, qk_scale=None, norm_layer=norm_layer)
-            for i in range(decoder_depth)])
+            for _ in range(decoder_depth)])
 
         self.decoder_norm = norm_layer(decoder_embed_dim)
         self.decoder_pred = nn.Linear(decoder_embed_dim, patch_size**2 * in_chans, bias=True) # decoder to patch
@@ -198,8 +198,8 @@ class MaskedAutoencoderViT(nn.Module):
         # predictor projection
         x = self.decoder_pred(x)
 
-        # remove cls token
-        x = x[:, 1:, :]
+        # keep only mask tokens
+        x = x[:, 1 + self.keep_length:, :]
 
         return x
 
@@ -208,7 +208,8 @@ class MaskedAutoencoderViT(nn.Module):
         imgs: [N + keep_length, 3, H, W]
         pred: [N, L, p*p*3]
         """
-        target = torch.cat([patches, self.patchify(imgs)], dim = 1)
+        # target = torch.cat([patches, self.patchify(imgs)], dim = 1)
+        target = self.patchify(imgs)
         if self.norm_pix_loss:
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)
@@ -225,7 +226,8 @@ class MaskedAutoencoderViT(nn.Module):
         latent = self.forward_encoder(patches, pos_embed)
         pred = self.forward_decoder(latent, pos_embed)  # [N, L, p*p*3]
         loss = self.forward_loss(imgs, pred, patches)
-        return loss, pred[:, self.keep_length:, :], pred[:, :self.keep_length, :]
+        return loss, pred
+        # return loss, pred[:, self.keep_length:, :], pred[:, :self.keep_length, :]
 
 
 def mae_vit_base_patch16_dec512d8b(**kwargs):
