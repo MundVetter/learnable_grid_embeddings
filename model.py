@@ -142,7 +142,7 @@ class MapFormer_classifier(nn.Module):
 
         if self.pos_encoding == 'grid':
             function = getattr(grid_encoding, f'{args.encoding_type}_encoding')
-            self.position_embedding = grid_encoding.generate_position_encoding(max_len, d_model, factor, encode_function=function)
+            self.position_embedding = grid_encoding.generate_positional_encoding(max_len, d_model, factor, encode_function=function)
         else:
             self.position_embedding = utils.get_position_embedding(max_len, d_model, factor).to(utils.get_device(args.use_cuda))
     
