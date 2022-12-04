@@ -30,6 +30,7 @@ def get_position_embedding(max_len, dim, factor):
     div_term = tc.exp(tc.arange(0, dim, 2).float() * (-math.log(factor) / dim))
     position_encoding[:, 0::2] = tc.sin(position * div_term)
     position_encoding[:, 1::2] = tc.cos(position * div_term)
+
     return position_encoding
 
 def get_grid_locations(image_size, patch_size):
@@ -38,6 +39,19 @@ def get_grid_locations(image_size, patch_size):
     col = tc.arange(offset, image_size, patch_size)
     grid = tc.stack(tc.meshgrid(row, col), dim=-1).reshape(-1, 2)
     return grid
+
+def posemb_sincos_2d(max_len, dim, temperature = 10000, dtype = torch.float):
+    h, w = max_len, max_len
+
+    y, x = torch.meshgrid(torch.arange(h), torch.arange(w), indexing = 'ij')
+    assert (dim % 4) == 0, 'feature dimension must be multiple of 4 for sincos emb'
+    omega = torch.arange(dim // 4) / (dim // 4 - 1)
+    omega = 1. / (temperature ** omega)
+
+    y = y.flatten()[:, None] * omega[None, :]
+    x = x.flatten()[:, None] * omega[None, :] 
+    pe = torch.cat((x.sin(), x.cos(), y.sin(), y.cos()), dim = 1)
+    return pe.type(dtype)
 
 def current_date_and_time():
     now = datetime.datetime.now()
@@ -242,9 +256,12 @@ if __name__ == '__main__':
     assert collapse_last_dim(x, dim=4).shape == tc.Size([15, 1, 4, 4])
     assert collapse_last_dim(x, dim=5).shape == tc.Size([15, 1, 4, 4])
 
-    position_encoding = get_position_embedding(28, 16, 100)
-    plot_image(position_encoding)
-    plt.show()
+    # position_encoding = get_position_embedding(28, 16, 100)
+    # plot_image(position_encoding)
+    # plt.show()
+
+    pos_2d = posemb_sincos_2d(28, 16)
+    print(pos_2d.shape)
 
     # encoding = grid_encoding(2, 1)
     # print(encoding)

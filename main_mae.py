@@ -125,10 +125,10 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_epochs', type=int, default=40, metavar='N',
                         help='epochs to warmup LR')
 
-    parser.add_argument('--embed_dim', type=int, default=256)
+    parser.add_argument('--embed_dim', type=int, default=512)
     parser.add_argument('--depth', type=int, default=6)
     parser.add_argument('--num_heads', type=int, default=8)
-    parser.add_argument('--decoder_embed_dim', type=int, default=256)
+    parser.add_argument('--decoder_embed_dim', type=int, default=512)
     parser.add_argument('--decoder_depth', type=int, default=6)
     parser.add_argument('--decoder_num_heads', type=int, default=8)
     parser.add_argument('--mlp_ratio', type=int, default=4)
