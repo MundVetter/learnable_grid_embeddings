@@ -83,6 +83,61 @@ def generate_position_encoding_old(max_len, dim, factor=100, encode_function=hex
 
     return encodings.reshape(max_len, max_len, dim)
 
+# --------------------------------------------------------
+# 2D sine-cosine position embedding
+# References:
+# Transformer: https://github.com/tensorflow/models/blob/master/official/nlp/transformer/model_utils.py
+# MoCo v3: https://github.com/facebookresearch/moco-v3
+# --------------------------------------------------------
+def get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False):
+    """
+    grid_size: int of the grid height and width
+    return:
+    pos_embed: [grid_size*grid_size, embed_dim] or [1+grid_size*grid_size, embed_dim] (w/ or w/o cls_token)
+    """
+    grid_h = np.arange(grid_size, dtype=np.float32)
+    grid_w = np.arange(grid_size, dtype=np.float32)
+    grid = np.meshgrid(grid_w, grid_h)  # here w goes first
+    grid = np.stack(grid, axis=0)
+
+    grid = grid.reshape([2, 1, grid_size, grid_size])
+    pos_embed = get_2d_sincos_pos_embed_from_grid(embed_dim, grid)
+    if cls_token:
+        pos_embed = np.concatenate([np.zeros([1, embed_dim]), pos_embed], axis=0)
+    return pos_embed
+
+
+def get_2d_sincos_pos_embed_from_grid(embed_dim, grid):
+    assert embed_dim % 2 == 0
+
+    # use half of dimensions to encode grid_h
+    emb_h = get_1d_sincos_pos_embed_from_grid(embed_dim // 2, grid[0])  # (H*W, D/2)
+    emb_w = get_1d_sincos_pos_embed_from_grid(embed_dim // 2, grid[1])  # (H*W, D/2)
+
+    emb = np.concatenate([emb_h, emb_w], axis=1) # (H*W, D)
+    return emb
+
+
+def get_1d_sincos_pos_embed_from_grid(embed_dim, pos, factor=10_000):
+    """
+    embed_dim: output dimension for each position
+    pos: a list of positions to be encoded: size (M,)
+    out: (M, D)
+    """
+    assert embed_dim % 2 == 0
+    omega = np.arange(embed_dim // 2, dtype=np.float)
+    omega /= embed_dim / 2.
+    omega = 1. / factor**omega  # (D/2,)
+
+    pos = pos.reshape(-1)  # (M,)
+    out = np.einsum('m,d->md', pos, omega)  # (M, D/2), outer product
+
+    emb_sin = np.sin(out) # (M, D/2)
+    emb_cos = np.cos(out) # (M, D/2)
+
+    emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
+    return emb
+
 
 if __name__ == "__main__":
     # k1 = tc.tensor([1.0, 0.0])
@@ -94,19 +149,20 @@ if __name__ == "__main__":
     # plt.show()
 
     # print(triangle_encoding(tc.tensor([[0, 500]])))
+    # get_2d_sincos_pos_embed(16, 14)
 
     # # plot the encoding
-    encodings = generate_positional_encoding(100, 16, encode_function=hexagon_encoding)
-    plt.imshow(encodings[:, :, :3])
+    encodings = generate_positional_encoding(16, 8, encode_function=hexagon_encoding)
+    plt.imshow(encodings[:, :, :].reshape(16*16, 8))
     plt.show()
     # encodings_old = generate_position_encoding_old(100, 4, 10_000,encode_function=hexagon_encoding)
     # plt.imshow(encodings_old)
     # plt.show()
 
-    # x = tc.arange(0, 40, 1)
-    # y = tc.arange(0, 40, 1)
+    x = tc.arange(0, 16, 1)
+    y = tc.arange(0, 16, 1)
 
-    # t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
+    t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
 
     # z =hexagon_encoding(t)
     # # # z = square_encoding(t)
@@ -120,14 +176,18 @@ if __name__ == "__main__":
     # plt.show()
 
 
-    # z =hexagon_encoding(t, func=tc.cos)
+    z =hexagon_encoding(t, func=tc.cos)
     # # z = square_encoding(t)
     # z = triangle_encoding(t)
     # print(z)
 
     # ax = plt.axes(projection='3d')
     # ax.view_init(azim=0, elev=90)
-    # ax.plot_trisurf(t[:, 0], t[:, 1], z, cmap='viridis', edgecolor='none')
+    # embed_dim = encodings.shape[-1]
+    # # t = get_all_positions(224)
+    # for i in range(embed_dim):
+    #     z = encodings[:, :, i]
+    #     ax.plot_wireframe(range(16), range(16), z)
     # plt.title('Hexagon Encoding sin')
     # plt.show()
 

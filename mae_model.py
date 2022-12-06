@@ -17,7 +17,7 @@ import torch.nn as nn
 from timm.models.vision_transformer import PatchEmbed, Block
 
 import utils
-import grid_encoding
+import pos_embed
 
 class MaskedAutoencoderViT(nn.Module):
     """ Masked Autoencoder with VisionTransformer backbone
@@ -41,8 +41,8 @@ class MaskedAutoencoderViT(nn.Module):
         
         self.pos_encoding = pos_encoding
         if pos_encoding == 'grid':
-            function = getattr(grid_encoding, f'{encoding_type}_encoding')
-            self.pos_embed = grid_encoding.generate_positional_encoding(img_size, embed_dim, factor, encode_function=function).to(utils.get_device(use_cuda))
+            function = getattr(pos_embed, f'{encoding_type}_encoding')
+            self.pos_embed = pos_embed.generate_positional_encoding(img_size, embed_dim, factor, encode_function=function).to(utils.get_device(use_cuda))
         else:
             self.pos_embed = utils.get_position_embedding(img_size, embed_dim, factor).to(utils.get_device(use_cuda))
 

@@ -9,7 +9,7 @@ from torch import nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
-import grid_encoding
+import pos_embed
 
 
 # helpers
@@ -141,8 +141,8 @@ class MapFormer_classifier(nn.Module):
         self.cls_pos_token = nn.Parameter(tc.randn(1, 1, d_model))
 
         if self.pos_encoding == 'grid':
-            function = getattr(grid_encoding, f'{args.encoding_type}_encoding')
-            self.position_embedding = grid_encoding.generate_position_encoding(max_len, d_model, factor, encode_function=function)
+            function = getattr(pos_embed, f'{args.encoding_type}_encoding')
+            self.position_embedding = pos_embed.generate_position_encoding(max_len, d_model, factor, encode_function=function)
         else:
             self.position_embedding = utils.get_position_embedding(max_len, d_model, factor).to(utils.get_device(args.use_cuda))
     
