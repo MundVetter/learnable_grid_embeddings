@@ -1,4 +1,4 @@
-from pos_embed import get_1d_sincos_pos_embed_from_grid
+from utils.pos_embed import get_1d_sincos_pos_embed_from_grid
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button

@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset
 from torchvision.transforms.functional import crop
 
-import utils
+import utils.misc as misc
 
 
 class FluidMask(Dataset):
@@ -32,7 +32,7 @@ class FluidMask(Dataset):
         locations = torch.randint(0, self.img_size, (self.n_patches, 2)) # TODO: generate locations also on the right edge
         patches = self.get_glimpses(image, locations)
 
-        patches = utils.collapse_last_dim(patches, dim=2)
+        patches = misc.collapse_last_dim(patches, dim=2)
 
         if self.return_original:
             return patches, locations, image, label

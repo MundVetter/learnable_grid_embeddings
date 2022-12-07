@@ -7,16 +7,16 @@ from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader
 import timm.optim.optim_factory as optim_factory
 
-import dataset
-import utils
-from mae_model import MaskedAutoencoderViT
+import utils.dataset as dataset
+import utils.misc as misc
+from models_mae import MaskedAutoencoderViT
 import torchvision.datasets as datasets
 from torchvision.utils import make_grid
 from torchvision import transforms
 
 def train(args):
-    device = utils.get_device(args.use_cuda)
-    utils.print_which_device(args.use_cuda)
+    device = misc.get_device(args.use_cuda)
+    misc.print_which_device(args.use_cuda)
 
     model = MaskedAutoencoderViT(**vars(args))
     model = model.to(device)
@@ -27,9 +27,9 @@ def train(args):
 
     param_groups = optim_factory.add_weight_decay(model, args.weight_decay)
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
-    loss_scaler = utils.NativeScalerWithGradNormCount()
+    loss_scaler = misc.NativeScalerWithGradNormCount()
 
-    save_path = os.path.join('save', utils.current_date_and_time())
+    save_path = os.path.join('save', misc.current_date_and_time())
     os.makedirs(save_path)
     writer = SummaryWriter(logdir=save_path)
     
@@ -51,7 +51,7 @@ def train(args):
     for epoch in range(1, args.n_epochs):
         model.train()
         for i, (glimpses, locations, imgs, targets) in enumerate(train_loader):
-            utils.adjust_learning_rate(optimizer, i / len(train_loader) + epoch, args)
+            misc.adjust_learning_rate(optimizer, i / len(train_loader) + epoch, args)
 
             glimpses = glimpses.to(device)
             locations = locations.to(device)
@@ -89,7 +89,7 @@ def train(args):
                     input_imgs = []
                     # predicted_imgs = []
                     for glimpse_item, location_item in zip(glimpses,  locations):
-                        img = utils.create_image_from_glimpses(glimpse_item, location_item, args.img_size, args.in_chans)
+                        img = misc.create_image_from_glimpses(glimpse_item, location_item, args.img_size, args.in_chans)
                     #     predicted_img = utils.create_image_from_glimpses(predicted_item, location_item, args.img_size)
                     #     predicted_imgs.append(predicted_img)
                         input_imgs.append(img)

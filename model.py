@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch as tc
-import utils
+import utils.misc as misc
 
 
 import torch
@@ -9,7 +9,7 @@ from torch import nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
-import pos_embed
+import utils.pos_embed as pos_embed
 
 
 # helpers
@@ -144,7 +144,7 @@ class MapFormer_classifier(nn.Module):
             function = getattr(pos_embed, f'{args.encoding_type}_encoding')
             self.position_embedding = pos_embed.generate_position_encoding(max_len, d_model, factor, encode_function=function)
         else:
-            self.position_embedding = utils.get_position_embedding(max_len, d_model, factor).to(utils.get_device(args.use_cuda))
+            self.position_embedding = misc.get_position_embedding(max_len, d_model, factor).to(misc.get_device(args.use_cuda))
     
         self.patch_to_embedding = nn.Linear(patch_size * patch_size, d_model)
 
@@ -165,7 +165,7 @@ class MapFormer_classifier(nn.Module):
             x, y = locations[:,:, 0], locations[:,:, 1]
             locations = self.position_embedding[x, y]
         else:
-            locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
+            locations = misc.collapse_last_dim(self.position_embedding[locations], dim=3)
         batch_size = glimpses.shape[0]
         glimpses = self.patch_to_embedding(glimpses)
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)

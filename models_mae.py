@@ -16,8 +16,8 @@ import torch.nn as nn
 
 from timm.models.vision_transformer import PatchEmbed, Block
 
-import utils
-import pos_embed
+import utils.misc as misc
+import utils.pos_embed as pos_embed
 
 class MaskedAutoencoderViT(nn.Module):
     """ Masked Autoencoder with VisionTransformer backbone
@@ -42,9 +42,9 @@ class MaskedAutoencoderViT(nn.Module):
         self.pos_encoding = pos_encoding
         if pos_encoding == 'grid':
             function = getattr(pos_embed, f'{encoding_type}_encoding')
-            self.pos_embed = pos_embed.generate_positional_encoding(img_size, embed_dim, factor, encode_function=function).to(utils.get_device(use_cuda))
+            self.pos_embed = pos_embed.generate_grid_posembed(img_size, embed_dim, factor, encode_function=function).to(misc.get_device(use_cuda))
         else:
-            self.pos_embed = utils.get_position_embedding(img_size, embed_dim, factor).to(utils.get_device(use_cuda))
+            self.pos_embed = misc.get_position_embedding(img_size, embed_dim, factor).to(misc.get_device(use_cuda))
 
         self.blocks = nn.ModuleList([
             Block(embed_dim, num_heads, mlp_ratio, qkv_bias=True, qk_scale=None, norm_layer=norm_layer)
@@ -54,7 +54,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         # --------------------------------------------------------------------------
         # MAE decoder specifics
-        self.decoder_pos_embed = self.compute_positional_encoding(utils.get_grid_locations(img_size, patch_size).unsqueeze(0)).to(utils.get_device(use_cuda))
+        self.decoder_pos_embed = self.compute_positional_encoding(misc.get_grid_locations(img_size, patch_size).unsqueeze(0)).to(misc.get_device(use_cuda))
         self.decoder_n_mask_tokens = len(self.decoder_pos_embed[0])
 
         self.decoder_embed = nn.Linear(embed_dim, decoder_embed_dim, bias=True)
@@ -156,7 +156,7 @@ class MaskedAutoencoderViT(nn.Module):
             x, y = locations[:,:, 0], locations[:,:, 1]
             return self.pos_embed[x, y]
         else:
-            return utils.collapse_last_dim(self.pos_embed[locations], dim=3)
+            return misc.collapse_last_dim(self.pos_embed[locations], dim=3)
 
     def forward_encoder(self, x, pos_embed):
         # embed patches

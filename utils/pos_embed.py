@@ -44,7 +44,7 @@ def triangle_encoding(t, func=tc.sin):
 
     return encoding
 
-def generate_positional_encoding(max_len, dim, temperature=10_000, encode_function=hexagon_encoding):
+def generate_grid_posembed(max_len, dim, temperature=10_000, encode_function=hexagon_encoding):
     """ Generate position encoding for a given max_len and d_model.
     """
     # y, x = torch.meshgrid(torch.arange(max_len), torch.arange(max_len), indexing = 'ij')
@@ -138,9 +138,21 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos, factor=10_000):
     emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
     return emb
 
+def generate_naive_posembed(max_len, dim, factor):
+    """ Generate naive pos embedding"""
+    dim = dim // 2
+    assert dim % 2 == 0, 'dim must be even'
+    position_encoding = tc.zeros(max_len, dim)
+    position = tc.arange(0, max_len, dtype=tc.float).unsqueeze(1)
+    div_term = tc.exp(tc.arange(0, dim, 2).float() * (-math.log(factor) / dim))
+    position_encoding[:, 0::2] = tc.sin(position * div_term)
+    position_encoding[:, 1::2] = tc.cos(position * div_term)
+
+    return position_encoding
+
 
 if __name__ == "__main__":
-    import utils
+    import utils.misc as misc
     # k1 = tc.tensor([1.0, 0.0])
     # k2 = tc.tensor([0.5, 3**0.5/2])
 
@@ -150,7 +162,7 @@ if __name__ == "__main__":
     # plt.show()
 
     sincos = get_1d_sincos_pos_embed_from_grid(8, tc.arange(0, 28, 1))
-    utils.plot_image(sincos)
+    misc.plot_image(sincos)
     plt.show()
 
     # print(triangle_encoding(tc.tensor([[0, 500]])))
