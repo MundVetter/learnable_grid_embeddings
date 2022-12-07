@@ -256,12 +256,12 @@ if __name__ == '__main__':
     assert collapse_last_dim(x, dim=4).shape == tc.Size([15, 1, 4, 4])
     assert collapse_last_dim(x, dim=5).shape == tc.Size([15, 1, 4, 4])
 
-    # position_encoding = get_position_embedding(28, 16, 100)
-    # plot_image(position_encoding)
-    # plt.show()
+    position_encoding = get_position_embedding(28, 16, 10_000)
+    plot_image(position_encoding)
+    plt.show()
 
-    pos_2d = posemb_sincos_2d(28, 16)
-    print(pos_2d.shape)
+    # pos_2d = posemb_sincos_2d(28, 16)
+    # print(pos_2d.shape)
 
     # encoding = grid_encoding(2, 1)
     # print(encoding)

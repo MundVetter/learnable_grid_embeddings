@@ -140,6 +140,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos, factor=10_000):
 
 
 if __name__ == "__main__":
+    import utils
     # k1 = tc.tensor([1.0, 0.0])
     # k2 = tc.tensor([0.5, 3**0.5/2])
 
@@ -148,21 +149,25 @@ if __name__ == "__main__":
     # plt.plot([0, k2[0]], [0, k2[1]], 'r')
     # plt.show()
 
+    sincos = get_1d_sincos_pos_embed_from_grid(8, tc.arange(0, 28, 1))
+    utils.plot_image(sincos)
+    plt.show()
+
     # print(triangle_encoding(tc.tensor([[0, 500]])))
     # get_2d_sincos_pos_embed(16, 14)
 
     # # plot the encoding
-    encodings = generate_positional_encoding(16, 8, encode_function=hexagon_encoding)
-    plt.imshow(encodings[:, :, :].reshape(16*16, 8))
-    plt.show()
+    # encodings = generate_positional_encoding(16, 8, encode_function=hexagon_encoding)
+    # plt.imshow(encodings[:, :, :].reshape(16*16, 8))
+    # plt.show()
     # encodings_old = generate_position_encoding_old(100, 4, 10_000,encode_function=hexagon_encoding)
     # plt.imshow(encodings_old)
     # plt.show()
 
-    x = tc.arange(0, 16, 1)
-    y = tc.arange(0, 16, 1)
+    # x = tc.arange(0, 16, 1)
+    # y = tc.arange(0, 16, 1)
 
-    t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
+    # t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
 
     # z =hexagon_encoding(t)
     # # # z = square_encoding(t)
@@ -176,7 +181,7 @@ if __name__ == "__main__":
     # plt.show()
 
 
-    z =hexagon_encoding(t, func=tc.cos)
+    # z =hexagon_encoding(t, func=tc.cos)
     # # z = square_encoding(t)
     # z = triangle_encoding(t)
     # print(z)
