@@ -39,10 +39,8 @@ def get_shared_folder() -> Path:
             p = Path(p.resolve())
             return p
     else:
-        if Path("/scratch/").is_dir():
-            p_first = Path(f"/scratch/{user}")
-            p_first.mkdir(exist_ok=True)
-            p = Path(f"/scratch/{user}/experiments")
+        if Path("/home/").is_dir():
+            p = Path(f"/home/{user}/experiments")
             p.mkdir(exist_ok=True)
             return p
     raise RuntimeError("No shared folder available")
