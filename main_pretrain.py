@@ -228,11 +228,11 @@ def main(args):
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                         'epoch': epoch,}
 
-        test_stat = evaluate(data_loader_test, model, device, epoch, log_writer, args)
-        print(f"Validation loss: {test_stat['loss']}")
-        if log_writer is not None:
+        # test_stat = evaluate(data_loader_test, model, device, epoch, log_writer, args)
+        # print(f"Validation loss: {test_stat['loss']}")
+        # if log_writer is not None:
             # write validation loss to tensorboard
-            log_writer.add_scalar('val_loss', test_stat['loss'], epoch)
+            # log_writer.add_scalar('val_loss', test_stat['loss'], epoch)
 
         if args.output_dir and misc.is_main_process():
             if log_writer is not None:
