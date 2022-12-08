@@ -26,7 +26,6 @@ def parse_args():
 
     parser.add_argument("--partition", default="gpu", type=str, help="Partition where to submit")
     parser.add_argument('--comment', default="", type=str, help="Comment to pass to scheduler")
-    parser.add_argument("--local", default=True, type=bool, help="Use local instead of slurm")
     return parser.parse_args()
 
 
@@ -95,11 +94,8 @@ def main():
     if args.job_dir == "":
         args.job_dir = get_shared_folder() / "%j"
 
-    if args.local:
-        executor = submitit.DebugExecutor(folder=args.job_dir)
-    else:
-        # Note that the folder will depend on the job_id, to easily track experiments
-        executor = submitit.LocalExecutor(folder=args.job_dir, slurm_max_num_timeout=30)
+    # Note that the folder will depend on the job_id, to easily track experiments
+    executor = submitit.LocalExecutor(folder=args.job_dir, slurm_max_num_timeout=30)
 
     num_gpus_per_node = args.ngpus
     nodes = args.nodes
