@@ -40,6 +40,8 @@ def get_shared_folder() -> Path:
             return p
     else:
         if Path("/scratch/").is_dir():
+            p_first = Path(f"/scratch/{user}")
+            p_first.mkdir(exist_ok=True)
             p = Path(f"/scratch/{user}/experiments")
             p.mkdir(exist_ok=True)
             return p
@@ -111,12 +113,13 @@ def main():
         mem_gb=40 * num_gpus_per_node,
         gpus_per_node=num_gpus_per_node,
         tasks_per_node=num_gpus_per_node,  # one task per GPU
-        cpus_per_task=10,
+        cpus_per_task=3,
         nodes=nodes,
         timeout_min=timeout_min,  # max is 60 * 72
         # Below are cluster dependent parameters
         slurm_partition=partition,
         slurm_signal_delay_s=120,
+
         **kwargs
     )
 
