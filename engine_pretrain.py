@@ -16,6 +16,7 @@ import torch
 
 import util.misc as misc
 import util.lr_sched as lr_sched
+from torchvision.utils import make_grid
 
 
 def train_one_epoch(model: torch.nn.Module,
@@ -36,16 +37,18 @@ def train_one_epoch(model: torch.nn.Module,
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
 
-    for data_iter_step, (samples, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+    for data_iter_step, (glimpses, locations, imgs, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
 
         # we use a per iteration (instead of per epoch) lr scheduler
         if data_iter_step % accum_iter == 0:
             lr_sched.adjust_learning_rate(optimizer, data_iter_step / len(data_loader) + epoch, args)
 
-        samples = samples.to(device, non_blocking=True)
+        glimpses = glimpses.to(device, non_blocking=True)
+        locations = locations.to(device, non_blocking=True)
+        imgs = imgs.to(device, non_blocking=True)
 
         with torch.cuda.amp.autocast():
-            loss, _, _ = model(samples, mask_ratio=args.mask_ratio)
+            loss, _ = model(glimpses, locations, imgs)
 
         loss_value = loss.item()
 
@@ -80,3 +83,45 @@ def train_one_epoch(model: torch.nn.Module,
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+
+def evaluate(data_loader: Iterable, model: torch.nn.Module, device: torch.device, epoch: int, log_writer=None, args=None):
+    model.eval()
+    metric_logger = misc.MetricLogger(delimiter="  ")
+    header = 'Test:'
+    print_freq = 20
+
+    with torch.no_grad():
+        for data_iter_step, (glimpses, locations, imgs, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+            glimpses = glimpses.to(device, non_blocking=True)
+            locations = locations.to(device, non_blocking=True)
+            imgs = imgs.to(device, non_blocking=True)
+
+
+            with torch.cuda.amp.autocast():
+                loss, predictions = model(glimpses, locations, imgs)
+
+            
+            if data_iter_step == 0 and log_writer is not None:
+                img_grid = make_grid(imgs)
+                predictions_grid = make_grid(model.unpatchify(predictions))
+                log_writer.add_image('images', img_grid, epoch)
+                log_writer.add_image('predictions', predictions_grid, epoch)
+
+                input_imgs = []
+                for glimpse_item, location_item in zip(glimpses,  locations):
+                    img = misc.create_image_from_glimpses(glimpse_item, location_item, args.input_size, args.in_chans)
+                    input_imgs.append(img)
+                input_imgs = torch.stack(input_imgs)
+                input_imgs_grid = make_grid(input_imgs)
+                log_writer.add_image('input glimpses', input_imgs_grid, epoch)
+
+            loss_value = loss.item()
+
+            torch.cuda.synchronize()
+
+            metric_logger.update(loss=loss_value)
+
+        # gather the stats from all processes
+        metric_logger.synchronize_between_processes()
+        print("Averaged stats:", metric_logger)
+        return {k: meter.global_avg for k, meter in metric_logger.meters.items()}

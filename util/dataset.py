@@ -2,13 +2,13 @@ import torch
 from torch.utils.data import Dataset
 from torchvision.transforms.functional import crop
 
-import utils.misc as misc
+import util.misc as misc
 
 
 class FluidMask(Dataset):
     def __init__(self, dataset, args, return_original=True):
         self.dataset = dataset
-        self.img_size = args.img_size
+        self.img_size = args.input_size
         self.patch_size = args.patch_size
         self.n_patches = args.n_patches
         self.return_original = return_original

@@ -16,18 +16,18 @@ import torch.nn as nn
 
 from timm.models.vision_transformer import PatchEmbed, Block
 
-import utils.misc as misc
-import utils.pos_embed as pos_embed
+import util.misc as misc
+import util.pos_embed as pos_embed
 
 class MaskedAutoencoderViT(nn.Module):
     """ Masked Autoencoder with VisionTransformer backbone
     """
-    def __init__(self, img_size=224, patch_size=16, in_chans=3,
+    def __init__(self, input_size=224, patch_size=16, in_chans=3,
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  mlp_ratio=4., norm_layer=partial(nn.LayerNorm, eps=1e-6), norm_pix_loss=False, pos_encoding = 'grid', encoding_type = 'hexagon',use_cuda=True, factor = 100, n_patches=10, **kwargs):
         super().__init__()
-        assert img_size % patch_size == 0, 'img_size must be divisible by patch_size'
+        assert input_size % patch_size == 0, 'img_size must be divisible by patch_size'
         assert embed_dim % num_heads == 0, 'embed_dim must be divisible by num_heads'
         assert decoder_embed_dim % decoder_num_heads == 0, 'decoder_embed_dim must be divisible by decoder_num_heads'
         # --------------------------------------------------------------------------
@@ -42,9 +42,9 @@ class MaskedAutoencoderViT(nn.Module):
         self.pos_encoding = pos_encoding
         if pos_encoding == 'grid':
             function = getattr(pos_embed, f'{encoding_type}_encoding')
-            self.pos_embed = pos_embed.generate_grid_posembed(img_size, embed_dim, factor, encode_function=function).to(misc.get_device(use_cuda))
+            self.pos_embed = pos_embed.generate_grid_posembed(input_size, embed_dim, factor, encode_function=function).to(misc.get_device(use_cuda))
         else:
-            self.pos_embed = misc.get_position_embedding(img_size, embed_dim, factor).to(misc.get_device(use_cuda))
+            self.pos_embed = misc.get_position_embedding(input_size, embed_dim, factor).to(misc.get_device(use_cuda))
 
         self.blocks = nn.ModuleList([
             Block(embed_dim, num_heads, mlp_ratio, qkv_bias=True, qk_scale=None, norm_layer=norm_layer)
@@ -54,7 +54,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         # --------------------------------------------------------------------------
         # MAE decoder specifics
-        self.decoder_pos_embed = self.compute_positional_encoding(misc.get_grid_locations(img_size, patch_size).unsqueeze(0)).to(misc.get_device(use_cuda))
+        self.decoder_pos_embed = self.compute_positional_encoding(misc.get_grid_locations(input_size, patch_size).unsqueeze(0)).to(misc.get_device(use_cuda))
         self.decoder_n_mask_tokens = len(self.decoder_pos_embed[0])
 
         self.decoder_embed = nn.Linear(embed_dim, decoder_embed_dim, bias=True)
@@ -203,7 +203,7 @@ class MaskedAutoencoderViT(nn.Module):
 
         return x
 
-    def forward_loss(self, imgs, pred, patches):
+    def forward_loss(self, imgs, pred):
         """
         imgs: [N + keep_length, 3, H, W]
         pred: [N, L, p*p*3]
@@ -225,7 +225,7 @@ class MaskedAutoencoderViT(nn.Module):
         pos_embed = self.compute_positional_encoding(locations)
         latent = self.forward_encoder(patches, pos_embed)
         pred = self.forward_decoder(latent, pos_embed)  # [N, L, p*p*3]
-        loss = self.forward_loss(imgs, pred, patches)
+        loss = self.forward_loss(imgs, pred)
         return loss, pred
         # return loss, pred[:, self.keep_length:, :], pred[:, :self.keep_length, :]
 
