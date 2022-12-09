@@ -86,7 +86,7 @@ def train(args):
     return accuracy
 
 def get_arg_parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--use_cuda', type=bool, default=True)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n_epochs', type=int, default=100)

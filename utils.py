@@ -143,6 +143,26 @@ def get_device(use_cuda):
         device_name = 'cpu'
     return tc.device(device_name)
 
+def get_1d_sincos_pos_embed_from_grid(embed_dim, pos, factor=10_000):
+    """
+    embed_dim: output dimension for each position
+    pos: a list of positions to be encoded: size (M,)
+    out: (M, D)
+    """
+    assert embed_dim % 2 == 0
+    omega = np.arange(embed_dim // 2, dtype=np.float)
+    omega /= embed_dim / 2.
+    omega = 1. / factor**omega  # (D/2,)
+
+    pos = pos.reshape(-1)  # (M,)
+    out = np.einsum('m,d->md', pos, omega)  # (M, D/2), outer product
+
+    emb_sin = np.sin(out) # (M, D/2)
+    emb_cos = np.cos(out) # (M, D/2)
+
+    emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
+    return emb
+
 
 if __name__ == '__main__':
     x = tc.rand(15, 1, 4, 4)
@@ -152,7 +172,7 @@ if __name__ == '__main__':
     assert collapse_last_dim(x, dim=4).shape == tc.Size([15, 1, 4, 4])
     assert collapse_last_dim(x, dim=5).shape == tc.Size([15, 1, 4, 4])
 
-    position_encoding = get_position_embedding(28, 16, 100)
+    position_encoding = get_position_embedding(28, 16, 10000)
     plot_image(position_encoding)
     plt.show()
 

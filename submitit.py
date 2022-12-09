@@ -6,7 +6,7 @@ import argparse
 def parse_args():
     training_args = main_c.get_arg_parser()
     parser = argparse.ArgumentParser("Submitit MNIST", parents=[training_args])
-    parser.add_argument("--array_parallelism", type=int, default=2")
+    parser.add_argument("--array_parallelism", type=int, default=2)
     parser.add_argument("--timeout", type=int, default=60)
     parser.add_argument("--partition", type=str, default="gpu_shared")
     parser.add_argument("--comment", type=str, default="")

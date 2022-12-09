@@ -97,8 +97,8 @@ if __name__ == "__main__":
     # print(triangle_encoding(tc.tensor([[0, 500]])))
 
     # # plot the encoding
-    encodings = generate_positional_encoding(100, 16, encode_function=hexagon_encoding)
-    plt.imshow(encodings[:, :, :3])
+    encodings = generate_positional_encoding(28, 16, factor = 100, encode_function=hexagon_encoding)
+    plt.imshow(encodings.reshape(28*28, 16))
     plt.show()
     # encodings_old = generate_position_encoding_old(100, 4, 10_000,encode_function=hexagon_encoding)
     # plt.imshow(encodings_old)
