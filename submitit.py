@@ -30,6 +30,5 @@ if __name__ == "__main__":
     pos_encodings = ['grid', 'naive', 'none']
     with executor.batch():
         for pos_encoding in pos_encodings:
-            for i in range(3):
-                args.pos_encoding = pos_encoding
-                job = executor.submit(main_c.main, args)
+            args.pos_encoding = pos_encoding
+            job = executor.submit(main_c.main, args)
