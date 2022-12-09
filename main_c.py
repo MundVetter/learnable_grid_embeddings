@@ -103,7 +103,7 @@ def get_arg_parser():
     parser.add_argument('--dataset', type=str, default='MNIST')
     parser.add_argument('--n_patches', type=int, default=200)
     parser.add_argument('--data_path', type=str, default='data_input')
-    parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'none'], default='grid')
+    parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'none'], default='naive')
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle'], default='hexagon', help='only used if positional_encoding is grid')
     return parser
 

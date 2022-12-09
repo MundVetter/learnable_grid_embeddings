@@ -160,16 +160,19 @@ class MapFormer_classifier(nn.Module):
 
     def forward(self, inputs):
         glimpses, locations= inputs
-        if self.pos_encoding == 'grid':
-            x, y = locations[:,:, 0], locations[:,:, 1]
-            locations = self.position_embedding[x, y]
-        else:
-            locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
+        if self.pos_encoding != 'none':
+            if self.pos_encoding == 'grid':
+                x, y = locations[:,:, 0], locations[:,:, 1]
+                locations = self.position_embedding[x, y]
+            else:
+                locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
+
+            source = glimpses + locations
+
         batch_size = glimpses.shape[0]
         glimpses = self.patch_to_embedding(glimpses)
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)
     
-        source = glimpses + locations
         source = tc.cat((source, cls_tokens), dim=1)
 
         encoding = self.transformer_encoder(source)
