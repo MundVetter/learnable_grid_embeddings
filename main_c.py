@@ -74,7 +74,7 @@ def train(args):
                 loss = criterion(predictions, targets)
                 correct += (predictions.argmax(dim=1) == targets).sum().item()
             accuracy = correct / len(test_data.dataset)
-            writer.add_scalar('test_accuracy', accuracy), epoch)
+            writer.add_scalar('test_accuracy', accuracy, epoch)
             print(f"test accuracy: {accuracy:.2f}", flush=True)
 
 
@@ -99,7 +99,7 @@ def get_arg_parser():
     parser.add_argument('--layer_norm_eps', type=float, default=1e-5)
     parser.add_argument('--patch_size', type=int, default=1)
     parser.add_argument('--max_len', type=int, default=28)
-    parser.add_argument('--div_factor', type=int, default=100)
+    parser.add_argument('--div_factor', type=int, default=10000)
     parser.add_argument('--dataset', type=str, default='MNIST')
     parser.add_argument('--n_patches', type=int, default=200)
     parser.add_argument('--data_path', type=str, default='data_input')
