@@ -1,0 +1,29 @@
+submitit ERROR (2022-12-08 12:53:26,308) - Submitted job triggered an exception
+Traceback (most recent call last):
+  File "/sw/arch/Debian10/EB_production/2022/software/Python/3.10.4-GCCcore-11.3.0-bare/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/sw/arch/Debian10/EB_production/2022/software/Python/3.10.4-GCCcore-11.3.0-bare/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/mvetter/.local/lib/python3.10/site-packages/submitit/core/_submit.py", line 11, in <module>
+    submitit_main()
+  File "/home/mvetter/.local/lib/python3.10/site-packages/submitit/core/submission.py", line 72, in submitit_main
+    process_job(args.folder)
+  File "/home/mvetter/.local/lib/python3.10/site-packages/submitit/core/submission.py", line 65, in process_job
+    raise error
+  File "/home/mvetter/.local/lib/python3.10/site-packages/submitit/core/submission.py", line 54, in process_job
+    result = delayed.result()
+  File "/home/mvetter/.local/lib/python3.10/site-packages/submitit/core/utils.py", line 133, in result
+    self._result = self.function(*self.args, **self.kwargs)
+  File "/home/mvetter/learnable_grid_embeddings/submitit_pretrain.py", line 66, in __call__
+    trainer.main(self.args)
+  File "/home/mvetter/learnable_grid_embeddings/main_pretrain.py", line 116, in main
+    misc.init_distributed_mode(args)
+  File "/home/mvetter/learnable_grid_embeddings/util/misc.py", line 443, in init_distributed_mode
+    torch.distributed.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
+  File "/home/mvetter/.local/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 786, in init_process_group
+    _store_based_barrier(rank, store, timeout)
+  File "/home/mvetter/.local/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 318, in _store_based_barrier
+    store.add(store_key, 1)
+RuntimeError: open(/scratch/mvetter/experiments/099a0d5549134788b259adfe8be5b972_init): No such file or directory
+srun: error: r30n4: task 0: Exited with exit code 1
+srun: error: r31n1: task 1: Exited with exit code 1

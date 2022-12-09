@@ -1,0 +1,5 @@
+submitit INFO (2022-12-08 07:20:15,821) - Starting with JobEnvironment(job_id=10480101, hostname=r33n3.lisa.surfsara.nl, local_rank=0(4), node=1(2), global_rank=4(8))
+submitit INFO (2022-12-08 07:20:15,822) - Loading pickle: /home/mvetter/learnable_grid_embeddings/job_dir/10480101_submitted.pkl
+Process group: 8 tasks, rank: 4
+| distributed init (rank 4): file:///scratch/mvetter/experiments/8e1b00154c404242b1cb2607ac4c8e45_init, gpu 0
+submitit ERROR (2022-12-08 07:50:29,825) - Submitted job triggered an exception

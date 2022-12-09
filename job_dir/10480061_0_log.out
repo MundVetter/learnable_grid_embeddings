@@ -1,0 +1,4 @@
+submitit INFO (2022-12-08 03:23:25,989) - Starting with JobEnvironment(job_id=10480061, hostname=r32n5.lisa.surfsara.nl, local_rank=0(1), node=0(1), global_rank=0(1))
+submitit INFO (2022-12-08 03:23:25,989) - Loading pickle: /home/mvetter/learnable_grid_embeddings/job_dir/10480061_submitted.pkl
+Process group: 1 tasks, rank: 0
+| distributed init (rank 0): file:///scratch/mvetter/experiments/462025bd1e614de1b13f66376ef8df69_init, gpu 0
