@@ -138,11 +138,10 @@ class MapFormer_classifier(nn.Module):
         self.pos_encoding = args.pos_encoding
 
         self.cls_token = nn.Parameter(tc.randn(1, 1, d_model))
-        self.cls_pos_token = nn.Parameter(tc.randn(1, 1, d_model))
 
         if self.pos_encoding == 'grid':
             function = getattr(grid_encoding, f'{args.encoding_type}_encoding')
-            self.position_embedding = grid_encoding.generate_positional_encoding(max_len, d_model, factor, encode_function=function)
+            self.position_embedding = grid_encoding.generate_positional_encoding(max_len, d_model, factor, encode_function=function).to(utils.get_device(args.use_cuda))
         else:
             self.position_embedding = utils.get_position_embedding(max_len, d_model, factor).to(utils.get_device(args.use_cuda))
     
@@ -169,11 +168,10 @@ class MapFormer_classifier(nn.Module):
         batch_size = glimpses.shape[0]
         glimpses = self.patch_to_embedding(glimpses)
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)
-        glimpses = tc.cat((cls_tokens, glimpses), dim=1)
-        cls_pos_tokens = self.cls_pos_token.expand(batch_size, -1, -1)
-        locations = tc.cat((cls_pos_tokens, locations), dim=1)
     
         source = glimpses + locations
+        source = tc.cat((source, cls_tokens), dim=1)
+
         encoding = self.transformer_encoder(source)
         output = self.output(encoding[:, 0])
         return self.softmax(output)
