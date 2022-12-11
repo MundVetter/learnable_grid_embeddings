@@ -160,6 +160,7 @@ class MapFormer_classifier(nn.Module):
 
     def forward(self, inputs):
         glimpses, locations= inputs
+        source = glimpses
         if self.pos_encoding != 'none':
             if self.pos_encoding == 'grid':
                 x, y = locations[:,:, 0], locations[:,:, 1]
@@ -167,7 +168,7 @@ class MapFormer_classifier(nn.Module):
             else:
                 locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
 
-            source = glimpses + locations
+            source += locations
 
         batch_size = glimpses.shape[0]
         glimpses = self.patch_to_embedding(glimpses)
