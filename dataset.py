@@ -29,7 +29,7 @@ class FluidMask(Dataset):
         image, label = self.dataset[idx]
         
         # generate n_patches random locations within the image
-        locations = torch.randint(0, self.img_size, (self.n_patches, 2)) # TODO: generate locations also on the right edge
+        locations = torch.randint(0, self.img_size, (self.n_patches, 2))
         patches = self.get_glimpses(image, locations)
 
         patches = utils.collapse_last_dim(patches, dim=2)
