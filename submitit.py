@@ -31,4 +31,4 @@ if __name__ == "__main__":
     with executor.batch():
         for pos_encoding in pos_encodings:
             args.pos_encoding = pos_encoding
-            job = executor.submit(main_c.main, args)
+            job = executor.submit(main_c.train, args)
