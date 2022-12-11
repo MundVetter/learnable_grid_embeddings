@@ -32,9 +32,9 @@ def get_position_embedding(max_len, dim, factor):
 def current_date_and_time():
     now = datetime.datetime.now()
     month = now.strftime("%B")
-    times = [now.day, now.hour, now.minute, now.second]
+    times = [now.day, now.hour, now.minute, now.second, now.microsecond]
     times = [str(time).zfill(2) for time in times]
-    return '{}{}_{}-{}-{}'.format(month[0:3], *times)
+    return '{}{}_{}-{}_({},{})'.format(month[0:3], *times)
 
 
 def collapse_last_dim(x, dim=3):
