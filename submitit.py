@@ -1,12 +1,13 @@
 import submitit
 import main_c
 import argparse
+import copy
 
 
 def parse_args():
     training_args = main_c.get_arg_parser()
     parser = argparse.ArgumentParser("Submitit MNIST", parents=[training_args])
-    parser.add_argument("--array_parallelism", type=int, default=2)
+    parser.add_argument("--array_parallelism", type=int, default=3)
     parser.add_argument("--timeout", type=int, default=60)
     parser.add_argument("--partition", type=str, default="gpu_shared")
     parser.add_argument("--comment", type=str, default="")
@@ -30,5 +31,7 @@ if __name__ == "__main__":
     pos_encodings = ['grid', 'naive', 'none']
     with executor.batch():
         for pos_encoding in pos_encodings:
-            args.pos_encoding = pos_encoding
-            job = executor.submit(main_c.train, args)
+            # create a new object to avoid overwriting the same object
+            args_copy = copy.deepcopy(args)
+            args_copy.pos_encoding = pos_encoding
+            job = executor.submit(main_c.train, args_copy)
