@@ -76,7 +76,7 @@ def train(args):
                 correct += (predictions.argmax(dim=1) == targets).sum().item()
             accuracy = correct / len(test_data.dataset)
             writer.add_scalar('test_accuracy', accuracy, epoch)
-            print(f"test accuracy: {accuracy:.2f}", flush=True)
+            print(f"test accuracy: {accuracy*100:.2f}", flush=True)
 
 
         # TODO start saving only after a time, or some quick delete
