@@ -12,6 +12,7 @@ def parse_args():
     parser.add_argument("--partition", type=str, default="gpu_shared")
     parser.add_argument("--comment", type=str, default="")
     parser.add_argument("--job_dir", type=str, default="job_dir")
+    parser.add_argument("--n_runs", type=int, default=1)
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -28,10 +29,11 @@ if __name__ == "__main__":
         slurm_array_parallelism=args.array_parallelism,
     )
 
-    pos_encodings = ['grid', 'naive', 'none']
+    pos_encodings = ['grid', 'naive']
     with executor.batch():
-        for pos_encoding in pos_encodings:
-            # create a new object to avoid overwriting the same object
-            args_copy = copy.deepcopy(args)
-            args_copy.pos_encoding = pos_encoding
-            job = executor.submit(main_c.train, args_copy)
+        for i in range(args.n_runs):
+            for pos_encoding in pos_encodings:
+                # create a new object to avoid overwriting the same object
+                args_copy = copy.deepcopy(args)
+                args_copy.pos_encoding = pos_encoding
+                executor.submit(main_c.train, args_copy)

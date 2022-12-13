@@ -4,6 +4,8 @@
 save*
 runs*
 data_*
+job_dir/*
+MNISTsave/*
 __pycache__/
 *.py[cod]
 *$py.class

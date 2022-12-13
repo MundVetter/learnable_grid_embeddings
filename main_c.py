@@ -4,6 +4,7 @@ import torch as tc
 import torch.nn as nn
 from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader
+import numpy as np
 
 from torchvision import datasets
 from torchvision import transforms
@@ -11,6 +12,22 @@ from torchvision import transforms
 import dataset
 import utils
 from model import MapFormer_classifier
+
+def calculate_accuracy(model, test_data, device):
+    correct = 0
+    with tc.no_grad():
+        model.eval()
+        for _, (glimpses, locations, targets) in enumerate(test_data):
+            glimpses = glimpses.to(device)
+            locations = locations.to(device)
+            targets = targets.to(device)
+
+            inputs = glimpses, locations
+            predictions = model(inputs)
+
+            loss = criterion(predictions, targets)
+            correct += (predictions.argmax(dim=1) == targets).sum().item()
+        return correct / len(test_data.dataset)
 
 
 def train(args):
@@ -21,6 +38,7 @@ def train(args):
     model.train()
     model = model.to(device)
     print("Pos encoding: ", args.pos_encoding)
+    print("Embed size:", args.d_model)
 
     optimizer = tc.optim.Adam(model.parameters(), lr=args.learning_rate)
     criterion = nn.NLLLoss()
@@ -60,30 +78,22 @@ def train(args):
         # TODO shorter epochs or different saving
 
         print('{}/{}'.format(str(epoch).zfill(2), args.n_epochs))
-
-        correct = 0
-        with tc.no_grad():
-            model.eval()
-            for i, (glimpses, locations, targets) in enumerate(test_data):
-                glimpses = glimpses.to(device)
-                locations = locations.to(device)
-                targets = targets.to(device)
-
-                inputs = glimpses, locations
-                predictions = model(inputs)
-
-                loss = criterion(predictions, targets)
-                correct += (predictions.argmax(dim=1) == targets).sum().item()
-            accuracy = correct / len(test_data.dataset)
-            writer.add_scalar('test_accuracy', accuracy, epoch)
-            print(f"test accuracy: {accuracy*100:.2f}", flush=True)
+        accuracy = calculate_accuracy(model, test_data, device)
+        writer.add_scalar('test_accuracy', accuracy, epoch)
+        print(f"test accuracy: {accuracy*100:.2f}", flush=True)
 
 
         # TODO start saving only after a time, or some quick delete
-
         if epoch % 10 == 0:
             tc.save(model.state_dict(), '{}/model_{}.pt'.format(save_path, str(epoch).zfill(2)))
-    print(f"final accuracy: {accuracy}")
+
+    print("Calculating final accuracy")
+    accs = []
+    for i in range(10):
+        accs.append(calculate_accuracy(model, test_data, device))
+    accuracy = np.mean(accs)
+    std = np.std(accs)
+    print(f"final accuracy: {accuracy} +- {std}")
     return accuracy
 
 def get_arg_parser():
