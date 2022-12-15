@@ -150,9 +150,17 @@ def generate_naive_posembed(max_len, dim, factor):
 
     return position_encoding
 
+def dot_product_sim(encoding_grid, position):
+    cell = encoding_grid[position[0], position[1], :]
+
+    # calculate dot product between center and all other points
+    dot_product = tc.einsum('d, hwd -> hw', cell, encoding_grid)
+    # normalize
+    dot_product = dot_product / tc.norm(cell) / tc.norm(encoding_grid, dim=-1)
+    return dot_product
 
 if __name__ == "__main__":
-    import utils.misc as misc
+    # import utils.misc as misc
     # k1 = tc.tensor([1.0, 0.0])
     # k2 = tc.tensor([0.5, 3**0.5/2])
 
@@ -161,15 +169,21 @@ if __name__ == "__main__":
     # plt.plot([0, k2[0]], [0, k2[1]], 'r')
     # plt.show()
 
-    sincos = get_1d_sincos_pos_embed_from_grid(8, tc.arange(0, 28, 1))
-    misc.plot_image(sincos)
-    plt.show()
+    # sincos = get_1d_sincos_pos_embed_from_grid(8, tc.arange(0, 28, 1))
+    # misc.plot_image(sincos)
+    # plt.show()
 
     # print(triangle_encoding(tc.tensor([[0, 500]])))
-    # get_2d_sincos_pos_embed(16, 14)
+    sincos_embed = torch.tensor(get_2d_sincos_pos_embed(256, 40)).reshape(40, 40, 256)
 
     # # plot the encoding
-    # encodings = generate_positional_encoding(16, 8, encode_function=hexagon_encoding)
+    encodings = generate_grid_posembed(28, 256, temperature = 10_000, encode_function=hexagon_encoding)
+    H, W, D = encodings.shape
+
+    pos = H // 2, W // 2
+    product = dot_product_sim(encodings, pos)
+    plt.imshow(product)
+    plt.show()
     # plt.imshow(encodings[:, :, :].reshape(16*16, 8))
     # plt.show()
     # encodings_old = generate_position_encoding_old(100, 4, 10_000,encode_function=hexagon_encoding)
