@@ -25,7 +25,6 @@ def calculate_accuracy(model, test_data, device):
             inputs = glimpses, locations
             predictions = model(inputs)
 
-            loss = criterion(predictions, targets)
             correct += (predictions.argmax(dim=1) == targets).sum().item()
         return correct / len(test_data.dataset)
 
@@ -37,8 +36,10 @@ def train(args):
     model = MapFormer_classifier(args)
     model.train()
     model = model.to(device)
-    print("Pos encoding: ", args.pos_encoding)
+    print("Pos encoding:", args.pos_encoding)
     print("Embed size:", args.d_model)
+    if args.pos_encoding == 'grid':
+        print("Grid type:", args.encoding_type)
 
     optimizer = tc.optim.Adam(model.parameters(), lr=args.learning_rate)
     criterion = nn.NLLLoss()
@@ -115,7 +116,7 @@ def get_arg_parser():
     parser.add_argument('--n_patches', type=int, default=200)
     parser.add_argument('--data_path', type=str, default='data_input')
     parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'none'], default='grid')
-    parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle'], default='hexagon', help='only used if positional_encoding is grid')
+    parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle', 'hexagon_1', 'hexagon_n14'], default='hexagon', help='only used if positional_encoding is grid')
     return parser
 
 if __name__ == '__main__':

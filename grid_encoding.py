@@ -16,17 +16,23 @@ def get_all_positions(n):
 def calculate_div_term(d_model, factor):
     return tc.exp(tc.arange(0, d_model).float() * (-math.log(factor) / d_model))
 
-def hexagon_encoding(t, func=tc.sin):
+def hexagon_encoding(t, func=tc.sin, offset=1):
     # create three 2 dimensional unit vectors that are 120 degrees apart
     k1 = tc.tensor([1.0, 0.0])
     k2 = tc.tensor([-1/2, 3**0.5/2])
     k3 = tc.tensor([-1/2, -3**0.5/2])
 
-    t += 1
+    t += offset
 
     encoding = func(special_dot(t, k1)) + func(special_dot(t, k2)) + func(special_dot(t, k3))
 
     return encoding
+
+def hexagon_encoding_1(t, func=tc.sin):
+    return hexagon_encoding(t, func=func, offset=1)
+
+def hexagon_encoding_n14(t, func=tc.sin):
+    return hexagon_encoding(t, func=func, offset=-14)
 
 def square_encoding(t, func=tc.sin):
     k1 = tc.tensor([1.0, 0.0])
