@@ -40,6 +40,9 @@ def train(args):
     print("Embed size:", args.d_model)
     if args.pos_encoding == 'grid':
         print("Grid type:", args.encoding_type)
+    print("N patches:", args.n_patches)
+    print("Batch size:", args.batch_size)
+    print("Rotation:", args.rotation)
 
     optimizer = tc.optim.Adam(model.parameters(), lr=args.learning_rate)
     criterion = nn.NLLLoss()
@@ -117,6 +120,7 @@ def get_arg_parser():
     parser.add_argument('--data_path', type=str, default='data_input')
     parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'none'], default='grid')
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle', 'hexagon_1', 'hexagon_n14'], default='hexagon', help='only used if positional_encoding is grid')
+    parser.add_argument('--rotation', type=int, help="Determines the rotation of the unit vectors in degrees. Only used if positional_encoding is grid", default=4) # TODO: add support for naive
     return parser
 
 if __name__ == '__main__':

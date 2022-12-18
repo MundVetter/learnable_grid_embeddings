@@ -16,7 +16,7 @@ def get_all_positions(n):
 def calculate_div_term(d_model, factor):
     return tc.exp(tc.arange(0, d_model).float() * (-math.log(factor) / d_model))
 
-def hexagon_encoding(t, func=tc.sin, offset=1):
+def hexagon_encoding(t, func=tc.sin, offset=0):
     # create three 2 dimensional unit vectors that are 120 degrees apart
     k1 = tc.tensor([1.0, 0.0])
     k2 = tc.tensor([-1/2, 3**0.5/2])
@@ -28,10 +28,10 @@ def hexagon_encoding(t, func=tc.sin, offset=1):
 
     return encoding
 
-def hexagon_encoding_1(t, func=tc.sin):
+def hexagon_1_encoding(t, func=tc.sin):
     return hexagon_encoding(t, func=func, offset=1)
 
-def hexagon_encoding_n14(t, func=tc.sin):
+def hexagon_n14_encoding(t, func=tc.sin):
     return hexagon_encoding(t, func=func, offset=-14)
 
 def square_encoding(t, func=tc.sin):
@@ -50,7 +50,15 @@ def triangle_encoding(t, func=tc.sin):
 
     return encoding
 
-def generate_positional_encoding(max_len, dim, factor=10_000, encode_function=hexagon_encoding):
+def rotate_by_degrees(t, degrees):
+    """ Rotate a tensor t (nxfx2) by a given number of degrees (fx1). """
+    radians = degrees * math.pi / 180
+    c, s = tc.cos(radians), tc.sin(radians)
+    R = tc.stack((c, -s, s, c), dim=1).view(-1, 2, 2)
+    R = R.repeat(t.shape[0], 1, 1, 1)
+    return (R @ t.unsqueeze(3)).squeeze(3)
+
+def generate_positional_encoding(max_len, dim, factor=10_000, encode_function=hexagon_encoding, rotation=0):
     """ Generate position encoding for a given max_len and d_model.
     """
     temperature = factor
@@ -63,9 +71,10 @@ def generate_positional_encoding(max_len, dim, factor=10_000, encode_function=he
     omega = tc.stack([omega, omega], dim=-1)
 
     # multiply by div term to get (d_model, 100, 2) tensor
-    # y = y.flatten()[:, None] * omega[None, :]
-    # x = x.flatten()[:, None] * omega[None, :] 
     position_scales = position.unsqueeze(1) * omega
+
+    rotations = torch.unsqueeze(tc.arange(0, dim // 2, 1) * rotation, dim=1)
+    position_scales = rotate_by_degrees(position_scales, rotations)
 
     encodings_sin = encode_function(position_scales)
     encodings_cos = encode_function(position_scales, func=tc.cos)
