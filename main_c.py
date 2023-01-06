@@ -59,8 +59,8 @@ def train(args):
     train_data = dataset.FluidMask(train_data, args, return_original=False)
     test_data = dataset.FluidMask(test_data, args, return_original=False)
 
-    train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, drop_last=True)
-    test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=False)
+    train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, drop_last=True, num_workers=args.num_workers)
+    test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=False, num_workers=args.num_workers)
     accuracy = 0
     for epoch in range(1, args.n_epochs):
         model.train()
@@ -102,7 +102,7 @@ def train(args):
 
 def get_arg_parser():
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('--use_cuda', type=bool, default=True)
+    parser.add_argument('--use_cuda', type=bool, default=False)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n_epochs', type=int, default=100)
     parser.add_argument('--d_model', type=int, default=8)
@@ -118,9 +118,13 @@ def get_arg_parser():
     parser.add_argument('--dataset', type=str, default='MNIST')
     parser.add_argument('--n_patches', type=int, default=200)
     parser.add_argument('--data_path', type=str, default='data_input')
-    parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'none'], default='grid')
+    parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'lff' 'none'], default='lff')
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle', 'hexagon_1', 'hexagon_n14'], default='hexagon', help='only used if positional_encoding is grid')
     parser.add_argument('--rotation', type=int, help="Determines the rotation of the unit vectors in degrees. Only used if positional_encoding is grid", default=4) # TODO: add support for naive
+    parser.add_argument('--random_rotation', type=bool, default=False)
+    parser.add_argument('--cosine', type=bool, default=False)
+    parser.add_argument('--gamma', type=float, default=1.0)
+    parser.add_argument('--num_workers', type=int, default=0)
     return parser
 
 if __name__ == '__main__':

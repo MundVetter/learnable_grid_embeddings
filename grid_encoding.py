@@ -19,6 +19,9 @@ def calculate_div_term(d_model, factor):
 
 def hexagon_encoding(t, func=tc.sin, offset=0):
     # create three 2 dimensional unit vectors that are 120 degrees apart
+    # k1 = tc.tensor([math.sqrt(2)/ 2, math.sqrt(2)/ 2])
+    # k2 = tc.tensor([-(math.sqrt(6) + math.sqrt(2))/4, (math.sqrt(6) - math.sqrt(2))/4])
+    # k3 = tc.tensor([(math.sqrt(6) - math.sqrt(2))/4, - (math.sqrt(6) + math.sqrt(2))/4])
     k1 = tc.tensor([1.0, 0.0])
     k2 = tc.tensor([-1/2, 3**0.5/2])
     k3 = tc.tensor([-1/2, -3**0.5/2])
@@ -59,53 +62,41 @@ def rotate_by_degrees(t, degrees):
     R = R.repeat(t.shape[0], 1, 1, 1)
     return (R @ t.type(R.type()).unsqueeze(3)).squeeze(3)
 
-def generate_positional_encoding(max_len, dim, factor=10_000, encode_function=hexagon_encoding, rotation=0, offset=0):
+def generate_positional_encoding(max_len, dim, factor=10_000, encode_function=hexagon_encoding, rotation=0, offset=0, random=False, cosine=False, scale=1.0):
     """ Generate position encoding for a given max_len and d_model.
     """
-    # temperature = factor
-    # # y, x = torch.meshgrid(torch.arange(max_len), torch.arange(max_len), indexing = 'ij')
-    # position = get_all_positions(max_len)
-    # # div_term = calculate_div_term(dim, factor)
-    # omega = torch.arange(dim // 2) / (dim // 2 - 1)
-    # omega = 1. / (temperature ** omega)
-    # # change div term such that [x,y,..., z] -> [[x,x], [y,y], ..., [z,z]]
-    # omega = tc.stack([omega, omega], dim=-1)
-
-    # # multiply by div term to get (d_model, 100, 2) tensor
-    # position_scales = position.unsqueeze(1) * omega
-
-    # rotations = torch.unsqueeze(tc.arange(0, dim // 2, 1) * rotation, dim=1)
-    # position_scales = rotate_by_degrees(position_scales, rotations)
-
-    # encodings_sin = encode_function(position_scales)
-    # encodings_cos = encode_function(position_scales, func=tc.cos)
-
-    # # merge sin and cos encodings
-    # encodings = tc.stack([encodings_sin, encodings_cos], dim=-1).reshape(max_len, max_len, dim)
-
-    # return encodings
     temperature = factor
-    # y, x = torch.meshgrid(torch.arange(max_len), torch.arange(max_len), indexing = 'ij')
+
     position = get_all_positions(max_len)
     # div_term = calculate_div_term(dim, factor)
+    if cosine:
+        dim = dim // 2
+
     omega = torch.arange(dim) / (dim - 1)
     omega = 1. / (temperature ** omega)
     # change div term such that [x,y,..., z] -> [[x,x], [y,y], ..., [z,z]]
     omega = tc.stack([omega, omega], dim=-1)
 
     # multiply by div term to get (d_model, 100, 2) tensor
-    position_scales = position.unsqueeze(1) * omega
+    position_scales = position.unsqueeze(1) * omega * scale
 
-    rotations = torch.unsqueeze(tc.arange(0, dim, 1) * rotation, dim=1)
+    if random:
+        rotations = tc.rand(dim) * 360
+    else:
+        rotations = torch.unsqueeze(tc.arange(0, dim, 1) * rotation, dim=1)
+    # generate random rotations in degrees
     position_scales = rotate_by_degrees(position_scales, rotations)
 
     encodings_sin = encode_function(position_scales, offset=offset)
-    # encodings_cos = encode_function(position_scales, func=tc.cos)
+    if cosine:
+        encodings_cos = encode_function(position_scales, func=tc.cos)
+        # merge sin and cos encodings
+        encodings = tc.stack([encodings_sin, encodings_cos], dim=-1)
+        dim *= 2
+    else:
+        encodings = encodings_sin
 
-    # merge sin and cos encodings
-    encodings = encodings_sin.reshape(max_len, max_len, dim)
-
-    return encodings
+    return encodings.reshape(max_len, max_len, dim)
 
 def generate_position_encoding_old(max_len, dim, factor=100, encode_function=hexagon_encoding):
     """ Generate position encoding for a given max_len and d_model.
@@ -153,8 +144,9 @@ def loss_fun(args):
 
 
 if __name__ == "__main__":
-    # k1 = tc.tensor([1.0, 0.0])
-    # k2 = tc.tensor([0.5, 3**0.5/2])
+    k1 = tc.tensor([math.sqrt(2)/ 2, math.sqrt(2)/ 2])
+    k2 = tc.tensor([-(math.sqrt(6) + math.sqrt(2))/4, (math.sqrt(6) - math.sqrt(2))/4])
+    k3 = tc.tensor([(math.sqrt(6) - math.sqrt(2))/4, - (math.sqrt(6) + math.sqrt(2))/4])
 
     # # plot the vectors
     # plt.plot([0, k1[0]], [0, k1[1]], 'r')
@@ -164,18 +156,18 @@ if __name__ == "__main__":
     # print(triangle_encoding(tc.tensor([[0, 500]])))
 
     # # # plot the encoding
-    # encodings = generate_positional_encoding(28, 2, factor = 10_000, encode_function=hexagon_encoding, rotation=60, offset=1)
+    # encodings = generate_positional_encoding(28, 512, factor = 10_000, encode_function=hexagon_encoding, rotation=60, offset=0)
     # values = encodings.sum(dim=-1)
-    # # # plt.imshow(encodings[:,:,:3])
-    # plt.imshow(values)
+    # plt.imshow(encodings[:,:,:3])
+    # # plt.imshow(values)
     # plt.show()
 
     # # print(gini(values))
     # offset_range = 28
-    angle_range = 180
+    # angle_range = 180
     # data = []
     # step_offset = 1
-    step_angle = 0.1
+    # step_angle = 0.1
     # for j in np.arange(-offset_range, offset_range, step_offset):
     #     results = []
     #     for i in np.arange(0.0, angle_range, step_angle):
@@ -201,17 +193,17 @@ if __name__ == "__main__":
     # # save data
     # np.save("data.npy", data)
 
-    results = []
-    for i in np.arange(0.0, angle_range, step_angle):
-        encodings = generate_positional_encoding(28, 512, factor = 10000, encode_function=hexagon_encoding, rotation=torch.tensor(i).double(), offset=1)
-        values = encodings.sum(dim=-1).reshape(-1)
-        results.append((values * values).std())
+    # results = []
+    # for i in np.arange(0.0, angle_range, step_angle):
+    #     encodings = generate_positional_encoding(28, 512, factor = 10000, encode_function=hexagon_encoding, rotation=torch.tensor(i).double(), offset=1)
+    #     values = encodings.sum(dim=-1).reshape(-1)
+    #     results.append((values * values).std())
 
-    print(np.argmin(results), np.min(results))
+    # print(np.argmin(results), np.min(results))
 
-    # # plot
-    plt.plot(np.arange(0.0, angle_range, step_angle), results)
-    plt.show()
+    # # # plot
+    # plt.plot(np.arange(0.0, angle_range, step_angle), results)
+    # plt.show()
 
 
     # ax = plt.axes(projection='3d')
@@ -228,12 +220,13 @@ if __name__ == "__main__":
     # print(loss_fun(torch.tensor(11).double()))
     # plt.imshow(encodings.sum(dim=-1))
     # plt.show()
-    # pos = [[14, 14], [0, 1], [5, 23], [23, 5], [23, 23]]
-    # for p in pos:
-    #     sim = dot_product_sim(encodings, p)
-    #     plt.imshow(sim)
-    #     plt.show()
-    # encodings_old = generate_position_encoding_old(100, 4, 10_000,encode_function=hexagon_encoding)
+    pos = [[14, 14], [5, 5], [5, 23], [23, 5], [23, 23]]
+    for p in pos:
+        encodings = generate_positional_encoding(28, 512, 10000,encode_function=hexagon_encoding, offset = 1, random=True, cosine=True)
+        sim = dot_product_sim(encodings, p)
+        plt.imshow(sim)
+        plt.show()
+    # encodings_old = generate_positional_encoding(100, 4, 10_000,encode_function=hexagon_encoding, offset = 0, rotation=0)
     # plt.imshow(encodings_old)
     # plt.show()
 

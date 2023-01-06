@@ -6,6 +6,8 @@ import utils
 import torch
 from torch import nn
 
+from LFF import LearnableFourierPositionalEncoding
+
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
@@ -141,9 +143,18 @@ class MapFormer_classifier(nn.Module):
 
         if self.pos_encoding == 'grid':
             function = getattr(grid_encoding, f'{args.encoding_type}_encoding')
-            self.position_embedding = grid_encoding.generate_positional_encoding(max_len, d_model, factor, encode_function=function, rotation=args.rotation).to(utils.get_device(args.use_cuda))
+            self.position_embedding = grid_encoding.generate_positional_encoding(max_len, d_model, factor, encode_function=function, rotation=args.rotation, random=args.random, cosine=args.cosine)
+        elif self.pos_encoding == 'lff':
+            self.position_embedding = LearnableFourierPositionalEncoding(1, 2, 128, 32, d_model, args.gamma)
+        elif self.pos_encoding == 'naive':
+            self.position_embedding = utils.get_position_embedding(max_len, d_model, factor)
+        elif self.pos_encoding == 'none':
+            self.position_embedding = None
         else:
-            self.position_embedding = utils.get_position_embedding(max_len, d_model, factor).to(utils.get_device(args.use_cuda))
+            raise ValueError('Invalid positional encoding type')
+
+        if self.position_embedding is not None:
+            self.position_embedding.to(utils.get_device(args.use_cuda))
     
         self.patch_to_embedding = nn.Linear(patch_size * patch_size, d_model)
 
@@ -166,8 +177,11 @@ class MapFormer_classifier(nn.Module):
             if self.pos_encoding == 'grid':
                 x, y = locations[:,:, 0], locations[:,:, 1]
                 locations = self.position_embedding[x, y]
-            else:
+            elif self.pos_encoding == 'naive':
                 locations = utils.collapse_last_dim(self.position_embedding[locations], dim=3)
+            elif self.pos_encoding == 'lff':
+                locations = locations.unsqueeze(2)
+                locations = self.position_embedding(locations)
 
             source += locations
 
