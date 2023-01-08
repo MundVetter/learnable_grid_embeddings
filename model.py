@@ -145,7 +145,7 @@ class MapFormer_classifier(nn.Module):
             function = getattr(grid_encoding, f'{args.encoding_type}_encoding')
             self.position_embedding = grid_encoding.generate_positional_encoding(max_len, d_model, factor, encode_function=function, rotation=args.rotation, random=args.random, cosine=args.cosine)
         elif self.pos_encoding == 'lff':
-            self.position_embedding = LearnableFourierPositionalEncoding(1, 2, 128, 32, d_model, args.gamma)
+            self.position_embedding = LearnableFourierPositionalEncoding(1, 2, args.F_dim, args.H_dim, d_model, args.gamma)
         elif self.pos_encoding == 'naive':
             self.position_embedding = utils.get_position_embedding(max_len, d_model, factor)
         elif self.pos_encoding == 'none':
