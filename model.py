@@ -154,7 +154,7 @@ class MapFormer_classifier(nn.Module):
             raise ValueError('Invalid positional encoding type')
 
         if self.position_embedding is not None:
-            self.position_embedding.to(utils.get_device(args.use_cuda))
+            self.position_embedding = self.position_embedding.to(utils.get_device(args.use_cuda))
     
         self.patch_to_embedding = nn.Linear(patch_size * patch_size, d_model)
 
