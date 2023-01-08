@@ -118,10 +118,10 @@ def get_arg_parser():
     parser.add_argument('--dataset', type=str, default='MNIST')
     parser.add_argument('--n_patches', type=int, default=200)
     parser.add_argument('--data_path', type=str, default='data_input')
-    parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'lff' 'none'], default='lff')
+    parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'lff', 'none'], default='lff')
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle', 'hexagon_1', 'hexagon_n14'], default='hexagon', help='only used if positional_encoding is grid')
     parser.add_argument('--rotation', type=int, help="Determines the rotation of the unit vectors in degrees. Only used if positional_encoding is grid", default=4) # TODO: add support for naive
-    parser.add_argument('--random_rotation', type=bool, default=False)
+    parser.add_argument('--random', type=bool, default=False)
     parser.add_argument('--cosine', type=bool, default=False)
     parser.add_argument('--gamma', type=float, default=1.0)
     parser.add_argument('--num_workers', type=int, default=0)

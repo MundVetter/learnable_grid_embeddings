@@ -13,7 +13,7 @@ def parse_args():
     parser.add_argument("--comment", type=str, default="")
     parser.add_argument("--job_dir", type=str, default="job_dir")
     parser.add_argument("--n_runs", type=int, default=1)
-    parser.add_argument("--cpus_per_task", type=int, default=10")
+    parser.add_argument("--cpus_per_task", type=int, default=10)
     parser.add_argument('--standard', action='store_true')
     return parser.parse_args()
 

@@ -87,7 +87,7 @@ def generate_positional_encoding(max_len, dim, factor=10_000, encode_function=he
     # generate random rotations in degrees
     position_scales = rotate_by_degrees(position_scales, rotations)
 
-    encodings_sin = encode_function(position_scales, offset=offset)
+    encodings_sin = encode_function(position_scales)
     if cosine:
         encodings_cos = encode_function(position_scales, func=tc.cos)
         # merge sin and cos encodings
