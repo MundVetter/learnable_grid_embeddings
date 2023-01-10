@@ -29,11 +29,15 @@ class LearnableFourierPositionalEncoding(nn.Module):
         # Projection matrix on learned lines (used in eq. 2)
         self.Wr = nn.Linear(self.M, self.F_dim // 2, bias=False)
         # MLP (GeLU(F @ W1 + B1) @ W2 + B2 (eq. 6)
-        self.mlp = nn.Sequential(
-            nn.Linear(self.F_dim, self.H_dim, bias=True),
-            nn.GELU(),
-            nn.Linear(self.H_dim, self.D // self.G)
-        )
+        if self.H_dim == 0:
+            # noop
+            self.mlp = nn.Identity()
+        else:
+            self.mlp = nn.Sequential(
+                nn.Linear(self.F_dim, self.H_dim, bias=True),
+                nn.GELU(),
+                nn.Linear(self.H_dim, self.D // self.G)
+            )
 
         self.init_weights()
 
