@@ -29,4 +29,4 @@ if __name__ == "__main__":
         slurm_partition=args.partition,
         slurm_array_parallelism=args.array_parallelism,
     )
-    executor.submit(rotations_test.train, args)
+    executor.submit(rotations_test.test, args)

@@ -163,6 +163,20 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos, factor=10_000):
     emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
     return emb
 
+def calculate_accuracy(model, test_data, device):
+    correct = 0
+    with tc.no_grad():
+        model.eval()
+        for _, (glimpses, locations, targets) in enumerate(test_data):
+            glimpses = glimpses.to(device)
+            locations = locations.to(device)
+            targets = targets.to(device)
+
+            inputs = glimpses, locations
+            predictions = model(inputs)
+
+            correct += (predictions.argmax(dim=1) == targets).sum().item()
+        return correct / len(test_data.dataset)
 
 if __name__ == '__main__':
     x = tc.rand(15, 1, 4, 4)

@@ -11,7 +11,35 @@ from torch.utils.data import DataLoader
 import dataset
 import utils
 from model import MapFormer_classifier
-from main_c import calculate_accuracy
+from utils import calculate_accuracy
+
+class Rotation:
+    def __init__(self, angle) -> None:
+        self.angle = angle
+    def __call__(self, x):
+        return transforms.functional.rotate(x, self.angle)
+
+
+def test_only(model, args):
+    device = utils.get_device(args.use_cuda)
+    transform_sequence = transforms.Compose([
+        transforms.ToTensor(),
+        Rotation(args.test_rotation)
+    ])
+
+    dataset_type = getattr(datasets, args.dataset)
+    test_data = dataset_type(root=args.data_path, train=False, download=True, transform=transform_sequence)
+
+    test_data = dataset.FluidMask(test_data, args, return_original=False)
+    test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=False, num_workers=args.num_workers)
+
+    accs = []
+    for i in range(10):
+        accs.append(calculate_accuracy(model, test_data, device))
+    accuracy = np.mean(accs)
+    std = np.std(accs)
+    print(f"rotation accuracy: {accuracy} +- {std}")
+
 
 def test(args):
     device = utils.get_device(args.use_cuda)
@@ -22,29 +50,7 @@ def test(args):
     model.load_state_dict(torch.load(f'{args.folder}/model_{args.epoch}.pt'))
     model.eval()
 
-    class Rotation:
-        def __init__(self, angle) -> None:
-            self.angle = angle
-        def __call__(self, x):
-            return transforms.functional.rotate(x, self.angle)
-
-    transform_sequence = transforms.Compose([
-        transforms.ToTensor(),
-        Rotation(args.test_rotation)
-    ])
-
-    dataset_type = getattr(datasets, args.dataset)
-    test_data = dataset_type(root=args.data_path, train=False, download=True, transform=transform_sequence)
-    test_data = dataset.FluidMask(test_data, args, return_original=False)
-
-    test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=False, num_workers=args.num_workers)
-
-    accs = []
-    for i in range(10):
-        accs.append(calculate_accuracy(model, test_data, device))
-    accuracy = np.mean(accs)
-    std = np.std(accs)
-    print(f"final accuracy: {accuracy} +- {std}")
+    test_only(model, args)
 
 
 def get_arg_parser():
@@ -75,7 +81,7 @@ def get_arg_parser():
     parser.add_argument('--H_dim', type=int, default=32)
     parser.add_argument('--F_dim', type=int, default=128)
 
-    parser.add_argument('--test_rotation', type=int, default=3)
+    parser.add_argument('--test_rotation', type=int, default=10)
     
     parser.add_argument('--folder', type=str, default="MNISTsave\Jan10_12-48_(25,561000)")
     parser.add_argument("--epoch", type=str, default="00")

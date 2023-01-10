@@ -13,20 +13,9 @@ import dataset
 import utils
 from model import MapFormer_classifier
 
-def calculate_accuracy(model, test_data, device):
-    correct = 0
-    with tc.no_grad():
-        model.eval()
-        for _, (glimpses, locations, targets) in enumerate(test_data):
-            glimpses = glimpses.to(device)
-            locations = locations.to(device)
-            targets = targets.to(device)
+from utils import calculate_accuracy
 
-            inputs = glimpses, locations
-            predictions = model(inputs)
-
-            correct += (predictions.argmax(dim=1) == targets).sum().item()
-        return correct / len(test_data.dataset)
+from rotations_test import test_only
 
 
 def train(args):
@@ -49,7 +38,7 @@ def train(args):
     optimizer = tc.optim.Adam(model.parameters(), lr=args.learning_rate)
     criterion = nn.NLLLoss()
 
-    save_path = os.path.join('MNISTsave', utils.current_date_and_time())
+    save_path = os.path.join(f'MNISTsave_{args.pos_encoding}', utils.current_date_and_time())
     os.makedirs(save_path)
     writer = SummaryWriter(logdir=save_path)
 
@@ -100,6 +89,9 @@ def train(args):
     accuracy = np.mean(accs)
     std = np.std(accs)
     print(f"final accuracy: {accuracy} +- {std}")
+
+    test_only(model, args)
+
     return accuracy
 
 def get_arg_parser():
@@ -129,6 +121,8 @@ def get_arg_parser():
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--H_dim', type=int, default=32)
     parser.add_argument('--F_dim', type=int, default=128)
+
+    parser.add_argument('--test_rotation', type=int, default=10)
 
     return parser
 

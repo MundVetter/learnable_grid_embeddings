@@ -81,7 +81,7 @@ def generate_positional_encoding(max_len, dim, factor=10_000, encode_function=he
     position_scales = position.unsqueeze(1) * omega * scale
 
     if random:
-        rotations = tc.rand(dim) * 360
+        rotations = tc.rand(dim, generator=torch.Generator().manual_seed(2147483647)) * 360
     else:
         rotations = torch.unsqueeze(tc.arange(0, dim, 1) * rotation, dim=1)
     # generate random rotations in degrees
