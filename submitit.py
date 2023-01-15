@@ -2,6 +2,7 @@ import submitit
 import main_c
 import argparse
 import copy
+import datetime
 
 
 def parse_args():
@@ -32,12 +33,13 @@ if __name__ == "__main__":
     )
     with executor.batch():
         for i in range(args.n_runs):
+            args_main = copy.deepcopy(args)
+            args_main.seed = i + 2147483647
             if args.standard:
-                executor.submit(main_c.train, args)
+                executor.submit(main_c.train, args_main)
             else:
-                pos_encodings = ['grid', 'naive']
+                pos_encodings = ['grid_new', 'naive']
                 for pos_encoding in pos_encodings:
-                    # create a new object to avoid overwriting the same object
-                    args_copy = copy.deepcopy(args)
-                    args_copy.pos_encoding = pos_encoding
-                    executor.submit(main_c.train, args_copy)
+                    args_encoding = copy.deepcopy(args_main)
+                    args_encoding.pos_encoding = pos_encoding
+                    executor.submit(main_c.train, args_encoding)

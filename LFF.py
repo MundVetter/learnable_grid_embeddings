@@ -47,7 +47,7 @@ class LearnableFourierPositionalEncoding(nn.Module):
     def forward(self, x):
         """
         Produce positional encodings from x
-        :param x: tensor of shape [N, G, M] that represents N positions where each position is in the shape of [G, M],
+        :param x: tensor of shape [B, N, G, M] that represents N positions where each position is in the shape of [G, M],
                   where G is the positional group and each group has M-dimensional positional values.
                   Positions in different positional groups are independent
         :return: positional encoding for X
@@ -69,8 +69,8 @@ if __name__ == '__main__':
     M = 17
     x = torch.randn((97, G, M))
     d = 128
-    enc = LearnableFourierPositionalEncoding(1, 2, 128, 32, d, 2.0)
-    position = grid_encoding.get_all_positions(28).unsqueeze(1)
+    enc = LearnableFourierPositionalEncoding(1, 2, 128, 0, d, 2.0)
+    position = grid_encoding.get_all_positions(28).unsqueeze(1).unsqueeze(0)
     encoding = enc(position).reshape((28, 28, d))
     # plt.imshow(encoding[0, :, :].detach())
     # plt.show()

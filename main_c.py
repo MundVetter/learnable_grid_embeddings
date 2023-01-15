@@ -29,6 +29,8 @@ def train(args):
     print("Embed size:", args.d_model)
     if args.pos_encoding == 'grid':
         print("Grid type:", args.encoding_type)
+    elif args.pos_encoding == 'grid_new':
+        print("seed", args.seed)
     print("N patches:", args.n_patches)
     print("Batch size:", args.batch_size)
     print("Rotation:", args.rotation)
@@ -112,7 +114,7 @@ def get_arg_parser():
     parser.add_argument('--dataset', type=str, default='MNIST')
     parser.add_argument('--n_patches', type=int, default=200)
     parser.add_argument('--data_path', type=str, default='data_input')
-    parser.add_argument('--pos_encoding', choices=['grid', 'naive', 'lff', 'none'], default='lff')
+    parser.add_argument('--pos_encoding', choices=['grid', 'grid_new', 'naive', 'lff', 'none'], default='grid_new')
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle', 'hexagon_1', 'hexagon_n14'], default='hexagon', help='only used if positional_encoding is grid')
     parser.add_argument('--rotation', type=int, help="Determines the rotation of the unit vectors in degrees. Only used if positional_encoding is grid", default=4) # TODO: add support for naive
     parser.add_argument('--random', type=bool, default=False)
@@ -121,6 +123,8 @@ def get_arg_parser():
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--H_dim', type=int, default=32)
     parser.add_argument('--F_dim', type=int, default=128)
+
+    parser.add_argument('--seed', type=int, default=2147483647, help="only used for grid encoding new")
 
     parser.add_argument('--test_rotation', type=int, default=10)
 

@@ -17,6 +17,25 @@ def get_all_positions(n):
 def calculate_div_term(d_model, factor):
     return tc.exp(tc.arange(0, d_model).float() * (-math.log(factor) / d_model))
 
+def hexagon_encoding_new(r, r0, lamda, theta):
+    freq = 2/(math.sqrt(3)*lamda)
+    X = r[..., 0]
+    Y = r[..., 1]
+    x0 = r0[..., 0]
+    y0 = r0[..., 1]
+    orien = theta
+
+    G = 1/3 * ( 
+    2/3 * (
+        torch.cos(2*torch.pi*freq * ((X-x0)*torch.cos(2/3*np.pi*1+orien) + (Y-y0)*torch.sin(2/3*torch.pi*1+orien)))
+        + torch.cos(2*torch.pi*freq * ((X-x0)*torch.cos(2/3*np.pi*2+orien) + (Y-y0)*torch.sin(2/3*torch.pi*2+orien)))
+        + torch.cos(2*torch.pi*freq * ((X-x0)*torch.cos(2/3*np.pi*3+orien) + (Y-y0)*torch.sin(2/3*torch.pi*3+orien)))
+            )
+    + 1
+        )
+
+    return G
+
 def hexagon_encoding(t, func=tc.sin, offset=0):
     # create three 2 dimensional unit vectors that are 120 degrees apart
     # k1 = tc.tensor([math.sqrt(2)/ 2, math.sqrt(2)/ 2])
@@ -140,13 +159,18 @@ def loss_fun(args):
     values = encodings.sum(dim=-1).reshape(-1)
     return (values * values).std()
 
+def plot_sim(encodings =generate_positional_encoding(28, 512, 10000, encode_function=hexagon_encoding, offset = 1, random=True, cosine=True), pos= [[14, 14], [5, 5], [5, 23], [23, 5], [23, 23]]):
+    for p in pos:
+        sim = dot_product_sim(encodings, p)
+        plt.imshow(sim)
+        plt.show()
 
 
 
 if __name__ == "__main__":
-    k1 = tc.tensor([math.sqrt(2)/ 2, math.sqrt(2)/ 2])
-    k2 = tc.tensor([-(math.sqrt(6) + math.sqrt(2))/4, (math.sqrt(6) - math.sqrt(2))/4])
-    k3 = tc.tensor([(math.sqrt(6) - math.sqrt(2))/4, - (math.sqrt(6) + math.sqrt(2))/4])
+    # k1 = tc.tensor([math.sqrt(2)/ 2, math.sqrt(2)/ 2])
+    # k2 = tc.tensor([-(math.sqrt(6) + math.sqrt(2))/4, (math.sqrt(6) - math.sqrt(2))/4])
+    # k3 = tc.tensor([(math.sqrt(6) - math.sqrt(2))/4, - (math.sqrt(6) + math.sqrt(2))/4])
 
     # # plot the vectors
     # plt.plot([0, k1[0]], [0, k1[1]], 'r')
@@ -220,31 +244,32 @@ if __name__ == "__main__":
     # print(loss_fun(torch.tensor(11).double()))
     # plt.imshow(encodings.sum(dim=-1))
     # plt.show()
-    pos = [[14, 14], [5, 5], [5, 23], [23, 5], [23, 23]]
-    for p in pos:
-        encodings = generate_positional_encoding(28, 512, 10000,encode_function=hexagon_encoding, offset = 1, random=True, cosine=True)
-        sim = dot_product_sim(encodings, p)
-        plt.imshow(sim)
-        plt.show()
+
     # encodings_old = generate_positional_encoding(100, 4, 10_000,encode_function=hexagon_encoding, offset = 0, rotation=0)
     # plt.imshow(encodings_old)
     # plt.show()
 
-    # x = tc.arange(0, 40, 1)
-    # y = tc.arange(0, 40, 1)
+    x = tc.arange(0, 40, 1)
+    y = tc.arange(0, 40, 1)
 
-    # t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
+    t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
+
+    theta = tc.tensor([2])
+    lamda = 10
+    r0 = tc.tensor([10, 10])
+    z = hexagon_encoding_new(t, r0, lamda, theta)
+
 
     # z =hexagon_encoding(t)
-    # # # z = square_encoding(t)
+    # z = square_encoding(t)
     # # z = triangle_encoding(t)
     # # print(z)
 
-    # ax = plt.axes(projection='3d')
-    # ax.view_init(azim=0, elev=90)
-    # ax.plot_trisurf(t[:, 0], t[:, 1], z, cmap='viridis', edgecolor='none')
-    # plt.title('Hexagon Encoding sin')
-    # plt.show()
+    ax = plt.axes(projection='3d')
+    ax.view_init(azim=0, elev=90)
+    ax.plot_trisurf(t[:, 0], t[:, 1], z, cmap='viridis', edgecolor='none')
+    plt.title('Hexagon Encoding')
+    plt.show()
 
 
     # z =hexagon_encoding(t, func=tc.cos)

@@ -186,14 +186,12 @@ if __name__ == '__main__':
     assert collapse_last_dim(x, dim=4).shape == tc.Size([15, 1, 4, 4])
     assert collapse_last_dim(x, dim=5).shape == tc.Size([15, 1, 4, 4])
 
-    position_encoding = get_position_embedding(28, 16, 10000)
+    position_encoding = get_position_embedding(28, 128, 10000)
     plot_image(position_encoding)
     plt.show()
 
     # encoding = grid_encoding(2, 1)
     # print(encoding)
-    
-
 
     # plot the vectors
     # k1 = tc.tensor([1.0, 0.0])

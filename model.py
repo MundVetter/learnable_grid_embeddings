@@ -13,6 +13,8 @@ from einops.layers.torch import Rearrange
 
 import grid_encoding
 
+import grid_encoding_new
+
 
 # helpers
 
@@ -144,6 +146,8 @@ class MapFormer_classifier(nn.Module):
         if self.pos_encoding == 'grid':
             function = getattr(grid_encoding, f'{args.encoding_type}_encoding')
             self.position_embedding = grid_encoding.generate_positional_encoding(max_len, d_model, factor, encode_function=function, rotation=args.rotation, random=args.random, cosine=args.cosine)
+        elif self.pos_encoding == 'grid_new':
+            self.position_embedding = grid_encoding_new.grid_encoding_new(max_len, d_model, factor, args.seed)
         elif self.pos_encoding == 'lff':
             self.position_embedding = LearnableFourierPositionalEncoding(1, 2, args.F_dim, args.H_dim, d_model, args.gamma)
         elif self.pos_encoding == 'naive':
@@ -174,7 +178,7 @@ class MapFormer_classifier(nn.Module):
         glimpses = self.patch_to_embedding(glimpses)
         source = glimpses
         if self.pos_encoding != 'none':
-            if self.pos_encoding == 'grid':
+            if self.pos_encoding == 'grid' or self.pos_encoding == 'grid_new':
                 x, y = locations[:,:, 0], locations[:,:, 1]
                 locations = self.position_embedding[x, y]
             elif self.pos_encoding == 'naive':
