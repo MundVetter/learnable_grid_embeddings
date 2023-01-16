@@ -52,8 +52,8 @@ def train(args):
     train_data = dataset.FluidMask(train_data, args, return_original=False)
     test_data = dataset.FluidMask(test_data, args, return_original=False)
 
-    train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, drop_last=True, num_workers=args.num_workers)
-    test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=False, num_workers=args.num_workers)
+    train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True, drop_last=True, num_workers=args.num_workers, pin_memory=True)
+    test_data = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, drop_last=False, num_workers=args.num_workers, pin_memory=True)
     accuracy = 0
     for epoch in range(1, args.n_epochs):
         model.train()
