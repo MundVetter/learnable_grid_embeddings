@@ -84,6 +84,15 @@ def train(args):
         if epoch % 10 == 0:
             tc.save(model.state_dict(), '{}/model_{}.pt'.format(save_path, str(epoch).zfill(2)))
 
+        if epoch == 149:
+            print("Calculating accuracy at epoch 150")
+            accs = []
+            for i in range(10):
+                accs.append(calculate_accuracy(model, test_data, device))
+            accuracy = np.mean(accs)
+            std = np.std(accs)
+            print(f"final accuracy: {accuracy} +- {std}")
+
     print("Calculating final accuracy")
     accs = []
     for i in range(10):
@@ -92,7 +101,7 @@ def train(args):
     std = np.std(accs)
     print(f"final accuracy: {accuracy} +- {std}")
 
-    test_only(model, args)
+    # test_only(model, args)
 
     return accuracy
 
