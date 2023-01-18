@@ -24,12 +24,12 @@ def hexagon_encoding_new(r, r0, omega, theta):
 
     return G
 
-def grid_encoding_new(max_len, dim, factor = 10_000, seed = 2147483647, rand = False, lamda_lower = 0.28, lamda_upper = 1.0, spacing_ratio = 1.42):
+def grid_encoding_new(max_len, dim, factor = 10_000, seed = 2147483647, random = False, lamda_lower = 0.28, lamda_upper = 1.0, spacing_ratio = 1.42):
     position = get_all_positions(max_len)
 
 
-    if rand:
-        c = - math.log(lamda_lower) / math.log(lamda_upper)
+    if random:
+        c = math.log(lamda_upper/lamda_lower) / math.log(spacing_ratio)
         i = torch.linspace(0.0, c, dim)
         omega = factor * 0.28 * 1.42 ** i
         generator = torch.Generator().manual_seed(seed)
@@ -56,11 +56,12 @@ def grid_encoding_new(max_len, dim, factor = 10_000, seed = 2147483647, rand = F
 
 if __name__ == "__main__":
     sum_test = False
-    sim_test = True
-    plot_embed = False
+    sim_test = False
+    plot_embed = True
+    hist = False
 
     # test sum behavior
-    encodings = grid_encoding_new(28, 128, factor = 40)
+    encodings = grid_encoding_new(28, 128, factor = 40, random=True)
     if sum_test:
         values = encodings.sum(dim=-1)
         # plt.imshow(encodings[:,:,:3])
@@ -73,4 +74,7 @@ if __name__ == "__main__":
 
     if plot_embed:
         plt.imshow(encodings.reshape((28*28, 128)))
+        plt.show()
+    if hist:
+        plt.hist(encodings.reshape((28*28, 128)).flatten(), bins=100)
         plt.show()
