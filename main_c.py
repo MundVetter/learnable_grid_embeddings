@@ -129,7 +129,7 @@ def get_arg_parser():
     parser.add_argument('--pos_encoding', choices=['grid', 'grid_new', 'naive', 'lff', 'none'], default='grid_new')
     parser.add_argument('--encoding_type', choices=['hexagon', 'square', 'triangle', 'hexagon_1', 'hexagon_n14'], default='hexagon', help='only used if positional_encoding is grid')
     parser.add_argument('--rotation', type=int, help="Determines the rotation of the unit vectors in degrees. Only used if positional_encoding is grid", default=4) # TODO: add support for naive
-    parser.add_argument('--random', type=bool, default=True)
+    parser.add_argument('--random', type=bool, default=False)
     parser.add_argument('--cosine', type=bool, default=False)
     parser.add_argument('--gamma', type=float, default=1.0)
     parser.add_argument('--num_workers', type=int, default=0)
