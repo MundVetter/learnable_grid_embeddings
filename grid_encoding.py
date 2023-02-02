@@ -14,6 +14,12 @@ def get_all_positions(n):
     y = tc.arange(0.0, n)
     return tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
 
+def get_all_positions_3d(n):
+    x = tc.arange(0.0, n)
+    y = tc.arange(0.0, n)
+    z = tc.arange(0.0, n)
+    return tc.stack(tc.meshgrid(x, y, z), dim=-1).reshape(-1, 3)
+
 def calculate_div_term(d_model, factor):
     return tc.exp(tc.arange(0, d_model).float() * (-math.log(factor) / d_model))
 
@@ -168,25 +174,25 @@ def plot_sim(encodings =generate_positional_encoding(28, 512, 10000, encode_func
 
 
 if __name__ == "__main__":
-    sum_test = False
-    sim_test = True
-    plot_embed = False
+    # sum_test = False
+    # sim_test = True
+    # plot_embed = False
 
-    # test sum behavior
-    encodings = generate_positional_encoding(28, 128, factor = 10_000, encode_function=hexagon_n14_encoding, rotation=0, random=False, cosine=True)
-    if sum_test:
-        values = encodings.sum(dim=-1)
-        # plt.imshow(encodings[:,:,:3])
-        plt.imshow(values)
-        plt.show()
+    # # test sum behavior
+    # encodings = generate_positional_encoding(28, 128, factor = 10_000, encode_function=hexagon_n14_encoding, rotation=0, random=False, cosine=True)
+    # if sum_test:
+    #     values = encodings.sum(dim=-1)
+    #     # plt.imshow(encodings[:,:,:3])
+    #     plt.imshow(values)
+    #     plt.show()
 
-    # test plot_sim
-    if sim_test:
-        plot_sim(encodings[:, :, :])
+    # # test plot_sim
+    # if sim_test:
+    #     plot_sim(encodings[:, :, :])
 
-    if plot_embed:
-        plt.imshow(encodings.reshape((28*28, 128)))
-        plt.show()
+    # if plot_embed:
+    #     plt.imshow(encodings.reshape((28*28, 128)))
+    #     plt.show()
 
 
     # k1 = tc.tensor([math.sqrt(2)/ 2, math.sqrt(2)/ 2])
@@ -270,10 +276,10 @@ if __name__ == "__main__":
     # plt.imshow(encodings_old)
     # plt.show()
 
-    # x = tc.arange(0, 40, 1)
-    # y = tc.arange(0, 40, 1)
+    x = tc.arange(0, 40, 1)
+    y = tc.arange(0, 40, 1)
 
-    # t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
+    t = tc.stack(tc.meshgrid(x, y), dim=-1).reshape(-1, 2)
 
     # theta = tc.tensor([2])
     # lamda = 10
@@ -281,7 +287,7 @@ if __name__ == "__main__":
     # z = hexagon_encoding_new(t, r0, lamda, theta)
 
 
-    # z =hexagon_encoding(t)
+    z =hexagon_encoding(t)
     # z = square_encoding(t)
     # # z = triangle_encoding(t)
     # # print(z)
