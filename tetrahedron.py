@@ -1,6 +1,5 @@
 import jax
-from jax import random, jit
-from jax.config import config
+from jax import random, jit, vmap
 import jax.numpy as np
 
 @jit
@@ -48,8 +47,13 @@ def calculate_angle(v1, v2):
     return np.arccos(np.sum(v1 * v2, axis=-1) / (np.linalg.norm(v1, axis=-1) * np.linalg.norm(v2, axis=-1)))
 
 @jit
-def compute_tetrahedron(p1, p2):
-    v2 = orthonormal_vector(p1, p2) * np.linalg.norm(p1) * ((2 * np.sqrt(2)/3))
+def compute_tetrahedron(b):
+    # split into p1 and p2
+    v1 = b[:3]
+    p = b[3:]
+
+    v1_norm = np.linalg.norm(v1)
+    v2 = orthonormal_vector(v1, p) * v1_norm * ((2 * np.sqrt(2)/3))
 
     basis = calc_basis(v1, v2)
     inv_basis = np.linalg.pinv(basis)
@@ -71,16 +75,18 @@ def compute_tetrahedron(p1, p2):
 
     return np.stack([v1, v2, v3, v4], axis=0)
 
-
 if __name__ == "__main__":
     key = random.PRNGKey(0)
     rand_key, subkey = random.split(key)
     # generate a random vector of norm np.sqrt(3/2)
-    v1 = random.normal(key, [3])
-    v1 = v1 / np.linalg.norm(v1) *  5
-    # v1 = np.array([0, 0, np.sqrt(3/2)])
-    p2 = random.normal(subkey, [3])
-    v1, v2, v3, v4 = compute_tetrahedron(v1, p2)
+    v1 = random.normal(key, [2, 3])
+    v1 = v1 / np.expand_dims(np.linalg.norm(v1[:, :3], axis = 1), axis=1) *  5
+    p = random.normal(subkey, [2, 3])
+    b = np.concatenate([v1, p], axis = 1)
+    # b = np.array([[1, 0, 0, 3, 0, 0]])
+
+    compute_tetrahedron_batched = vmap(compute_tetrahedron, in_axes=0, out_axes=1)
+    v1, v2, v3, v4 = compute_tetrahedron_batched(b)
 
 
     print("v1:", v1)
@@ -89,12 +95,11 @@ if __name__ == "__main__":
     print("v4:", v4)
 
     # norm of v2
-    print("norm of v1:", np.linalg.norm(v1))
-    print("norm of v2:", np.linalg.norm(v2))
-    print("norm of v3:", np.linalg.norm(v3))
-    print("norm of v4:", np.linalg.norm(v4))
+    print("norm of v1:", np.linalg.norm(v1, axis = 1))
+    print("norm of v2:", np.linalg.norm(v2, axis = 1))
+    print("norm of v3:", np.linalg.norm(v3, axis = 1))
+    print("norm of v4:", np.linalg.norm(v4, axis = 1))
 
     print("angle v1 v2:", calculate_angle(v1, v2))
     print("angle v1 v3:", calculate_angle(v2, v3))
     print("angle v1 v4:", calculate_angle(v2, v4))
-    
